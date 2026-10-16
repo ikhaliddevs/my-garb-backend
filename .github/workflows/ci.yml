@@ -1,0 +1,35 @@
+name: Backend CI
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main, feature/milestone-01-backend-foundation]
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:8.0
+        ports: ['27017:27017']
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      PORT: 5000
+      MONGODB_URI: mongodb://127.0.0.1:27017/mygarb_phasonable_test
+      TEST_MONGODB_URI: mongodb://127.0.0.1:27017/mygarb_phasonable_test
+      FRONTEND_ORIGINS: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
