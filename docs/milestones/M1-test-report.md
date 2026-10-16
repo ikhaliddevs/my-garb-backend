@@ -49,6 +49,15 @@ The one local skip is the POSIX SIGTERM process test: Windows child.kill force-t
 
 ## Remote validation and remaining risks
 
-At this snapshot the feature commit/PR and GitHub Actions execution are pending. The workflow uses Node 24 and MongoDB 8.0, runs npm ci/lint/tests, and has contents:read permission only. Local results must not be represented as CI results. Final remote status will be recorded after publication.
+Feature implementation commit: `90d32ecd4810243496f33a2da3b72efa8cf76e26`. Branch: `feature/milestone-01-backend-foundation`. [PR #1](https://github.com/ikhaliddevs/my-garb-backend/pull/1) targets develop and remains unmerged.
+
+GitHub Actions was inspected through the GitHub API using the existing Git credential helper (no credentials printed or stored). Both runs completed successfully:
+
+- [PR run 38928759785](https://github.com/ikhaliddevs/my-garb-backend/actions/runs/38928759785): completed, success.
+- [Push run 38928757747](https://github.com/ikhaliddevs/my-garb-backend/actions/runs/38928757747): completed, success.
+
+These runs used Node 24 and MongoDB 8.0 and executed `npm ci`, `npm run lint`, and `npm test`. The POSIX test is enabled on Ubuntu. CI success is independent evidence from the Windows results above. Repository workflow permissions are contents:read only. This documentation follow-up records results for the implementation SHA explicitly; subsequent workflow runs must be checked for their own status.
+
+Publication commands executed successfully: `git diff --cached --check`, `git commit -m "feat: establish milestone 1 backend foundation"`, `git push -u origin feature/milestone-01-backend-foundation`, `node .tmp/github.cjs pr`, and `node .tmp/github.cjs ci`. The ignored helper calls GitHub REST for PR creation and workflow inspection because GitHub CLI is not installed. Final status inspection showed no tracked/untracked deliverable changes before this evidence-only update.
 
 Postman and Compass GUI interaction and Swagger browser interaction were not executed; the import artifacts and HTTP documentation responses are provided and tested as described above. No separate Node 24 local run was performed; CI supplies that runtime. No destructive test cleanup or development database reset occurred. No authentication or future milestone work was performed. PRD mapping remains unverified because no PRD was available.
