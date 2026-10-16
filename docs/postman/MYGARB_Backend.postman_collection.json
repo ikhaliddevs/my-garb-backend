@@ -1,0 +1,100 @@
+{
+  "info": {
+    "name": "MY GARB Backend - Milestone 1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Start the API and MongoDB before running. All requests need no authentication or body. Readiness expects a connected database. See README for a safe isolated readiness-failure demonstration."
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "item": [
+    {
+      "name": "Liveness",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/health/live",
+        "description": "Liveness; no authentication or request body."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('JSON response', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+              "pm.test('Expected response', () => { pm.expect(pm.response.json()).to.eql({success:true,data:{status:'alive'}}); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Readiness",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/health/ready",
+        "description": "Readiness; no authentication or request body."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('JSON response', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+              "pm.test('Expected response', () => { pm.expect(pm.response.json()).to.eql({success:true,data:{status:'ready'}}); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "OpenAPI JSON",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/docs.json",
+        "description": "OpenAPI JSON; no authentication or request body."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('JSON response', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+              "pm.test('Expected response', () => { const body=pm.response.json(); pm.expect(body.openapi).to.eql('3.0.3'); pm.expect(body.paths).to.have.property('/api/health/ready'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Unknown route",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/unknown",
+        "description": "Unknown route; no authentication or request body."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 404', () => pm.response.to.have.status(404));",
+              "pm.test('JSON response', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+              "pm.test('Expected response', () => { pm.expect(pm.response.json()).to.eql({success:false,error:{code:'NOT_FOUND',message:'Route not found'}}); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
