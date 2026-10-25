@@ -1,6 +1,6 @@
 # MY GARB PHASONABLE Backend
 
-Milestone 1 provides the REST API foundation only. No authentication, frontend, business endpoints, or models are implemented. No PRD existed in the initial empty repository; the supplied Milestone 1 brief is the current specification.
+Milestone 1 provides the REST API foundation only. No authentication, frontend, business endpoints, or models are implemented. The [PRD](docs/PRD.md), version 1.1, defines the product baseline; section 10 defines the current backend foundation scope. See the [milestone summary](docs/milestones/M1-summary.md) and [test report](docs/milestones/M1-test-report.md) for delivery evidence and review status.
 
 ## Setup
 
@@ -69,4 +69,4 @@ docs/milestones/        Scope, evidence, next prompt
 
 ## Limitations
 
-No deployment infrastructure or business functionality is included. No PRD was supplied; confirm roles and business rules from it before Milestone 2. Automated HTTP checks do not imply Compass or Postman GUI testing. Do not start Milestone 2 without explicit approval.
+No deployment infrastructure or business functionality is included. Read the PRD and obtain explicit approval before Milestone 2. Automated HTTP checks do not imply Compass or Postman GUI testing. Latest local verification passed with 17 tests passed, 0 failed, and 1 Windows-only skip; current-commit CI and human approval must be verified separately.

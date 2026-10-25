@@ -1,19 +1,21 @@
 # Milestone 1 test report
 
-Date: 2026-10-16 (Africa/Lagos).
+Original implementation verification: 2026-10-16. Latest local review: 2026-10-24 (Africa/Lagos).
 
-## Environment and final local results
+## Environment and latest local results
 
 Windows PowerShell; Node v26.3.1; npm 11.16.0; installed MongoDB Community Server 8.3 with running MongoDB service. Integration tests connect only to `mongodb://127.0.0.1:27017/mygarb_phasonable_test`. No test writes or deletes database data.
 
 | Command | Actual result |
 | --- | --- |
-| `npm.cmd ci --fetch-retries=0 --fetch-timeout=15000` | PASS: 188 packages installed; audit found 0 vulnerabilities |
+| `npm.cmd ci --fetch-retries=0 --fetch-timeout=15000` | PASS: 188 packages installed in 42 seconds; no new audit count reported |
 | `npm.cmd run lint` | PASS: ESLint 10, zero errors |
-| `npm.cmd test` | PASS: 18 tests, 17 passed, 0 failed, 1 explicitly skipped; 7.773 seconds |
+| `npm.cmd test` | PASS: 18 tests, 17 passed, 0 failed, 1 explicitly skipped; 7.854 seconds |
 | `git diff --check` | PASS: no whitespace errors; Git emitted Windows line-ending notices |
 
 The one local skip is the POSIX SIGTERM process test: Windows child.kill force-terminates instead of delivering a POSIX signal. Real HTTP/database graceful closure and idempotence passed locally. Ubuntu CI is configured to run the signal test without skipping.
+
+These checks were executed during the 24 October review at `ef313566f444bcd77876572ddb6e14cfd55cd958`, with the supplied PRD present locally. This delivery follow-up changes documentation only; application code, tests, dependencies, lockfile and CI configuration are unchanged. The original 16 October run also had 17 passed, 0 failed and 1 skipped, in 7.773 seconds; its clean install reported zero vulnerabilities. The latest install again warned that the optional `@scarf/scarf` postinstall script was not approved; install and checks passed without approving it. MongoDB was running for the latest tests; its installed version was recorded during the original verification, not re-queried during this review.
 
 ## Cases
 
@@ -49,15 +51,17 @@ The one local skip is the POSIX SIGTERM process test: Windows child.kill force-t
 
 ## Remote validation and remaining risks
 
-Feature implementation commit: `90d32ecd4810243496f33a2da3b72efa8cf76e26`. Branch: `feature/milestone-01-backend-foundation`. [PR #1](https://github.com/ikhaliddevs/my-garb-backend/pull/1) targets develop and remains unmerged.
+Current-history implementation commit: `91848b61f0ef32a2f838c544215d061b20662520`. Reviewed documentation baseline: `ef313566f444bcd77876572ddb6e14cfd55cd958`. Branch: `feature/milestone-01-backend-foundation`. [PR #1](https://github.com/ikhaliddevs/my-garb-backend/pull/1) is recorded as targeting develop and unmerged, pending human review; live status must be checked separately.
 
-GitHub Actions was inspected through the GitHub API using the existing Git credential helper (no credentials printed or stored). Both runs completed successfully:
+Historical CI evidence was recorded for the former implementation identifier `90d32ecd4810243496f33a2da3b72efa8cf76e26`. This identifier predates the current history and is retained only to identify the original runs. At the original verification, GitHub Actions was inspected through the API without printing or storing credentials. Both historical runs completed successfully:
 
 - [PR run 38928759785](https://github.com/ikhaliddevs/my-garb-backend/actions/runs/38928759785): completed, success.
 - [Push run 38928757747](https://github.com/ikhaliddevs/my-garb-backend/actions/runs/38928757747): completed, success.
 
-These runs used Node 24 and MongoDB 8.0 and executed `npm ci`, `npm run lint`, and `npm test`. The POSIX test is enabled on Ubuntu. CI success is independent evidence from the Windows results above. Repository workflow permissions are contents:read only. This documentation follow-up records results for the implementation SHA explicitly; subsequent workflow runs must be checked for their own status.
+These historical runs used Node 24 and MongoDB 8.0 and executed `npm ci`, `npm run lint`, and `npm test`. The POSIX test is enabled on Ubuntu. Repository workflow permissions are contents:read only. Historical success does not establish CI success for `91848b6`, `ef31356`, or the latest documentation commit. Verify the latest pushed SHA in [PR #1 checks](https://github.com/ikhaliddevs/my-garb-backend/pull/1/checks) or [GitHub Actions](https://github.com/ikhaliddevs/my-garb-backend/actions).
+
+During the 24 October review, GitHub CLI was unavailable, the credential lookup returned no credential, API requests failed with `fetch failed` (including the outside-sandbox retry), and browser lookups returned `Cache miss`. Therefore that review could not verify the current PR or CI. These failures are verification limitations, not CI failures. Delivery publication and a fresh remote verification are attempted separately after this documentation update; their result must be tied to the actual pushed SHA.
 
 Publication commands executed successfully: `git diff --cached --check`, `git commit -m "feat: establish milestone 1 backend foundation"`, `git push -u origin feature/milestone-01-backend-foundation`, `node .tmp/github.cjs pr`, and `node .tmp/github.cjs ci`. The ignored helper calls GitHub REST for PR creation and workflow inspection because GitHub CLI is not installed. Final status inspection showed no tracked/untracked deliverable changes before this evidence-only update.
 
-Postman and Compass GUI interaction and Swagger browser interaction were not executed; the import artifacts and HTTP documentation responses are provided and tested as described above. No separate Node 24 local run was performed; CI supplies that runtime. No destructive test cleanup or development database reset occurred. No authentication or future milestone work was performed. PRD mapping remains unverified because no PRD was available.
+Postman and Compass GUI interaction and Swagger browser interaction were not executed; the import artifacts and HTTP documentation responses are provided and tested as described above. No separate Node 24 local run was performed; historical CI supplies that runtime evidence. No destructive test cleanup or development database reset occurred. No authentication or future milestone work was performed. The supplied PRD v1.1 is now included at `docs/PRD.md`; its section 10 foundation requirements were reviewed against the implementation, as mapped in M1-summary.md. Product-wide acceptance criteria remain outside M1.

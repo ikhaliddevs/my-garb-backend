@@ -4,11 +4,11 @@
 
 Create a maintainable, tested CommonJS Express foundation for continued milestone development and weekly demonstrations. Delivered environment validation, local Mongoose connectivity, HTTP lifecycle, safe middleware, liveness/readiness, OpenAPI/Swagger, Postman examples, real database tests, and GitHub Actions.
 
-Status: implementation and automated verification complete. Required local checks and both GitHub Actions runs passed for implementation commit 90d32ecd4810243496f33a2da3b72efa8cf76e26. [PR #1](https://github.com/ikhaliddevs/my-garb-backend/pull/1) targets develop and awaits human review; it is not merged. See M1-test-report.md for evidence. This is not merge authorization.
+Status as of 24 October 2026: implementation and local verification passed (17 tests passed, 0 failed, 1 Windows-only skip). The implementation commit in current history is `91848b61f0ef32a2f838c544215d061b20662520`; the reviewed documentation baseline is `ef313566f444bcd77876572ddb6e14cfd55cd958`. Historical CI evidence uses an earlier commit identifier and does not certify the latest documentation commit. [PR #1](https://github.com/ikhaliddevs/my-garb-backend/pull/1) is recorded as targeting develop and awaiting human review, unmerged. Current remote status and CI require verification; see M1-test-report.md. This is not merge authorization.
 
 ## Requirements and decisions
 
-No PRD or development documents existed in the initial empty repository. The user's M1 brief provides the foundation requirements; mapping to an unavailable PRD cannot be verified. All requested foundation categories are represented; authentication and role-based access are deferred.
+The supplied [PRD v1.1](../PRD.md), section 10, defines M1. Its foundation requirements map to the implementation: CommonJS Express initialization and lifecycle separation; validated environment and Mongoose connection; security middleware, safe logs and centralized errors; liveness/readiness; Swagger/OpenAPI; infrastructure tests and GitHub Actions; Postman exports and setup documentation. Authentication and role-based access remain deferred pending explicit M2 approval.
 
 - Root-level package/configuration; Node 24 LTS recommended and Node 26 accepted. Express 5 and Mongoose 9 with supported ESLint 10 and a committed npm lockfile. Mongoose 9 requires at least Node 20.19; selected Node versions exceed that requirement (https://mongoosejs.com/docs/migrating_to_9.html).
 - App creation, database lifecycle, and HTTP startup/shutdown are separate. Route handlers remain small; no unused models/services/scaffolding.
@@ -19,10 +19,10 @@ No PRD or development documents existed in the initial empty repository. The use
 
 ## Files changed
 
-- Root: README.md, AGENTS.md, package.json, package-lock.json, .gitignore, .env.example, .nvmrc, eslint.config.js.
+- Root: README.md, package.json, package-lock.json, .gitignore, .env.example, .nvmrc, eslint.config.js.
 - Runtime: src/app.js, src/server.js, src/config/env.js, src/config/database.js, src/routes/health.js, src/middleware/errors.js, src/docs/openapi.json.
 - Tests: tests/http.test.js, tests/database.test.js, tests/process.test.js.
-- Delivery: .github/workflows/ci.yml; docs/postman/MYGARB_Backend.postman_collection.json; docs/postman/local.postman_environment.json; docs/milestones/M1-summary.md, M1-test-report.md, M2-codex-prompt.md.
+- Delivery: docs/PRD.md; .github/workflows/ci.yml; docs/postman/MYGARB_Backend.postman_collection.json; docs/postman/local.postman_environment.json; docs/milestones/M1-summary.md, M1-test-report.md, M2-codex-prompt.md.
 
 ## Setup and presentation
 
@@ -37,9 +37,10 @@ Use Node 24, run `npm ci`, copy `.env.example` to `.env`, start local MongoDB, t
 - [x] Real database readiness, failure, cleanup, HTTP/security/configuration tests.
 - [x] Clean install, lint, and local tests executed successfully; platform-specific signal test explicitly reported.
 - [x] CI workflow, setup documentation, AGENTS rules, milestone reports, next prompt.
-- [x] Feature published, PR #1 targets develop, push/PR CI successful on the implementation commit.
+- [x] Historical feature publication, PR #1 targeting develop, and historical push/PR CI success recorded.
+- [ ] Verify PR status and CI for the latest pushed documentation commit.
 - [ ] Human review/approval (no merge performed).
 
 ## Limitations
 
-PRD unavailable; future roles/business scope remain unconfirmed. Rate limiting is per-process; proxy trust is disabled. Readiness follows driver heartbeat timing. Postman/Compass GUI and Swagger browser interaction were not manually exercised. Windows cannot exercise POSIX child signals; Ubuntu CI runs that test. No business persistence or deployment infrastructure is included. Stop after M1 and wait for explicit M2 approval.
+Current remote verification remains outstanding; historical CI success must not be treated as success for a newer SHA. Rate limiting is per-process; proxy trust is disabled. Readiness follows driver heartbeat timing. Postman/Compass GUI and Swagger browser interaction were not manually exercised. Windows cannot exercise POSIX child signals; Ubuntu CI is configured to run that test. No business persistence or deployment infrastructure is included. Stop after M1 and wait for explicit M2 approval.

@@ -1,6 +1,6 @@
 # Copy-ready Milestone 2 prompt
 
-Implement Milestone 2 only for MY GARB PHASONABLE: authentication and role-based access. Begin only after explicit approval. Read AGENTS.md, README, M1-summary.md, M1-test-report.md, and the actual PRD. No PRD existed in the initial repository: obtain it and confirm roles, registration/login requirements, and account lifecycle before making assumptions. Resolve remaining M1 verification blockers first.
+Implement Milestone 2 only for MY GARB PHASONABLE: authentication and role-based access. Begin only after explicit approval. Read local AGENTS.md, README, M1-summary.md, M1-test-report.md, and docs/PRD.md (v1.1). Use FR01 and section 10 for customer, designer and admin roles, registration/login requirements, and account lifecycle; confirm the detailed M2 scope before implementation. Resolve remaining M1 verification blockers first. This prepared prompt is not approval to begin M2.
 
 Preserve the CommonJS Express/Mongoose foundation, app factory, environment validation, safe error envelopes, middleware, health endpoints, graceful shutdown, OpenAPI, Postman, and MongoDB CI. Inspect git status and branches; create a milestone feature branch from approved develop without overwriting unrelated work. Do not merge the M1 PR yourself.
 
