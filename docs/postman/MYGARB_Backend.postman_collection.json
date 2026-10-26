@@ -1,8 +1,8 @@
 {
   "info": {
-    "name": "MY GARB Backend - Milestone 1",
+    "name": "MY GARB Backend - Milestones 1 and 2",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Start the API and MongoDB before running. All requests need no authentication or body. Readiness expects a connected database. See README for a safe isolated readiness-failure demonstration."
+    "description": "Start API and MongoDB; select MY GARB Local. Set authPassword privately before running. Authentication POSTs send X-MYGARB-Request: 1 and JSON. Login stores HttpOnly cookie in the Postman cookie jar; logout revokes it. Do not export populated credentials or cookies. The collection creates new customer/designer demo records; it does not delete development data. Registration generates unique local emails. Full run stays within the default 10 auth attempts/15 minutes; repeated runs may require waiting."
   },
   "auth": {
     "type": "noauth"
@@ -93,6 +93,426 @@
               "pm.test('Expected response', () => { pm.expect(pm.response.json()).to.eql({success:false,error:{code:'NOT_FOUND',message:'Route not found'}}); });"
             ]
           }
+        }
+      ]
+    },
+    {
+      "name": "M2 Authentication",
+      "item": [
+        {
+          "name": "Register customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo Customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"customer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get('authPassword')) throw new Error('Set authPassword privately in your local Postman environment first');",
+                  "pm.environment.set('customerEmail', 'customer-' + Date.now() + '@example.test');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(201));",
+                  "pm.test('Safe customer user', () => { const u=pm.response.json().data.user; pm.expect(u.role).to.eql('customer'); pm.expect(u).not.to.have.property('passwordHash'); pm.expect(u).not.to.have.property('password'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Duplicate customer rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo Customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"customer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Public admin registration rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Not an Admin\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Wrong credentials rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"Deliberately-wrong-demo-password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "pm.test('Safe customer user', () => { const u=pm.response.json().data.user; pm.expect(u.role).to.eql('customer'); pm.expect(u).not.to.have.property('passwordHash'); pm.expect(u).not.to.have.property('password'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Current customer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "pm.test('Safe customer user', () => { const u=pm.response.json().data.user; pm.expect(u.role).to.eql('customer'); pm.expect(u).not.to.have.property('passwordHash'); pm.expect(u).not.to.have.property('password'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/logout",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Current user after logout rejected",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register designer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo Designer\",\n  \"email\": \"{{designerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"designer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('designerEmail', 'designer-' + Date.now() + '@example.test');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(201));",
+                  "pm.test('Safe designer user', () => { const u=pm.response.json().data.user; pm.expect(u.role).to.eql('designer'); pm.expect(u).not.to.have.property('passwordHash'); pm.expect(u).not.to.have.property('password'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login designer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{designerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "pm.test('Safe designer user', () => { const u=pm.response.json().data.user; pm.expect(u.role).to.eql('designer'); pm.expect(u).not.to.have.property('passwordHash'); pm.expect(u).not.to.have.property('password'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Current designer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
+                  "pm.test('Safe designer user', () => { const u=pm.response.json().data.user; pm.expect(u.role).to.eql('designer'); pm.expect(u).not.to.have.property('passwordHash'); pm.expect(u).not.to.have.property('password'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout designer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/logout",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected status', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
         }
       ]
     }

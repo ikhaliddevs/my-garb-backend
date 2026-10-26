@@ -13,7 +13,11 @@ function validateEnv(env) {
     try { parsed = new URL(origin); } catch { throw new Error('Invalid FRONTEND_ORIGINS'); }
     if (!['http:', 'https:'].includes(parsed.protocol) || parsed.origin !== origin) throw new Error('Invalid FRONTEND_ORIGINS');
   }
-  return { nodeEnv, port, mongoUri: env.MONGODB_URI, origins };
+  if (!/^[a-fA-F0-9]{64}$/.test(env.JWT_SECRET || '')) throw new Error('JWT_SECRET must be 64 hexadecimal characters');
+  const sessionTtlSeconds = Number(env.SESSION_TTL_SECONDS || 3600);
+  if (!Number.isInteger(sessionTtlSeconds) || sessionTtlSeconds < 300 || sessionTtlSeconds > 86400) throw new Error('Invalid SESSION_TTL_SECONDS');
+  if (nodeEnv === 'production' && origins.some(origin => !origin.startsWith('https://'))) throw new Error('Production origins must use HTTPS');
+  return { nodeEnv, port, mongoUri: env.MONGODB_URI, origins, jwtSecret: env.JWT_SECRET, sessionTtlSeconds };
 }
 
 function loadConfig() {

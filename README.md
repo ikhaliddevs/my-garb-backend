@@ -1,72 +1,81 @@
-# MY GARB PHASONABLE Backend
+﻿# MY GARB PHASONABLE Backend
 
-Milestone 1 provides the REST API foundation only. No authentication, frontend, business endpoints, or models are implemented. The [PRD](docs/PRD.md), version 1.1, defines the product baseline; section 10 defines the current backend foundation scope. See the [milestone summary](docs/milestones/M1-summary.md) and [test report](docs/milestones/M1-test-report.md) for delivery evidence and review status.
+M1 foundation is approved and merged into `develop`. M2 adds accounts and role-based access only. The [PRD](docs/PRD.md) defines the product scope; see [M2 summary](docs/milestones/M2-summary.md) and [test report](docs/milestones/M2-test-report.md) for evidence. Profiles, portfolios, discovery, requests, orders and other business features remain deferred.
 
 ## Setup
 
-Install Node.js 24 LTS (recommended, `.nvmrc`), MongoDB Community Server 8.x, MongoDB Compass, Git, and optionally Postman. Node 26 is also accepted; CI uses Node 24. Windows PowerShell users can use `npm.cmd` if execution policy blocks `npm`.
+Use Node.js 24 LTS (recommended; `.nvmrc`) or Node 26, MongoDB Community Server 8.x, Git, and optionally Compass/Postman. Windows users can use `npm.cmd` if PowerShell blocks `npm`.
 
-```powershell
-npm ci
-Copy-Item .env.example .env
-npm run dev
+1. Run `npm ci`.
+2. Copy `.env.example` to `.env` only if `.env` does not exist; preserve existing values.
+3. Configure the values below. Generate a private signing key with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"` and save it as `JWT_SECRET` only in your local environment. Do not share the output or commit it.
+4. Ensure local MongoDB is running, then run `npm run dev` (watch mode) or `npm start`.
+
+| Variable | Meaning |
+| --- | --- |
+| `NODE_ENV` | development, test or production; defaults to development |
+| `PORT` | API port, default 5000 |
+| `MONGODB_URI` | Required development URI; example uses local `mygarb_phasonable` |
+| `FRONTEND_ORIGINS` | Required comma-separated exact origins without paths/trailing slashes; include the API origin to use Swagger auth POSTs, e.g. `http://localhost:5000,http://localhost:3000` |
+| `JWT_SECRET` | Required 64 hexadecimal characters generated from 32 random bytes; no default |
+| `SESSION_TTL_SECONDS` | Integer 300-86400, defaults to 3600; no refresh endpoint |
+| `TEST_MONGODB_URI` | Tests only; local localhost/127.0.0.1 with explicit port and exactly `mygarb_phasonable_test` |
+
+Use the same hostname consistently in Postman/Swagger because cookies are host-scoped. If another project owns the configured port, preserve it and choose an available port, updating local configuration, origin allowlist and Postman `baseUrl` together. Start only one MY GARB instance; confirm its OpenAPI title before testing.
+
+On Windows, inspect MongoDB with `Get-Service MongoDB`; starting a stopped service with `Start-Service MongoDB` may require an administrator terminal. Never delete/reset its data directory. Compass can connect to the local MongoDB server. M2 stores users and sessions; do not use real customer data for demos.
+
+Startup validates configuration, connects MongoDB and creates the authentication indexes before listening. Importing modules does not connect or listen. Shutdown drains HTTP and closes MongoDB. Readiness follows driver heartbeat timing, not an immediate database ping. Startup errors are sanitized; configuration/connection details are never logged.
+
+## API and authentication
+
+Default base URL: `http://localhost:5000/api`. Swagger UI: `/api/docs/`; JSON: `/api/docs.json` (title `MY GARB PHASONABLE Backend`, OpenAPI 3.0.3, API version 0.2.0).
+
+| Method/path | Behavior |
+| --- | --- |
+| GET `/health/live` | 200, `{success:true,data:{status:"alive"}}` |
+| GET `/health/ready` | 200 ready or 503 `NOT_READY` |
+| POST `/auth/register` | 201; name, email, password, role (`customer` or `designer`); returns safe user, does not log in |
+| POST `/auth/login` | 200; email/password; safe user and HttpOnly session cookie |
+| GET `/auth/me` | 200 safe current user; 401 for missing, expired, revoked, deleted or suspended account |
+| POST `/auth/logout` | 200; send `{}`; revokes current session and expires cookie; stale/repeated logout returns 401 |
+
+Every auth POST requires `Content-Type: application/json` and `X-MYGARB-Request: 1`. Browser `Origin`, when present, must exactly match the configured allowlist; `null`, unlisted origins and cross-site Fetch Metadata are rejected. Non-browser clients may omit Origin but still require the header. This custom-header/preflight policy plus SameSite=Strict protects against CSRF, including login CSRF. Credentialed CORS allows only configured origins. CORS alone is not authentication; do not add untrusted origins. Swagger UI is same-origin but its POST Origin still needs to be allowlisted.
+
+Session cookie: `mygarb_session`, HttpOnly, SameSite=Strict, Path=/api, host-only; Secure in production. Production configuration requires HTTPS origins; deploy behind HTTPS before real use. Local HTTP development omits Secure. No bearer-token mode is implemented. JWT uses HS256 with fixed issuer/audience, subject and random session identifier. MongoDB stores a SHA-256 hash of that identifier and expiry; every protected request checks persisted session expiry and current active user/role. TTL deletion is housekeeping, never the authorization check. Logout deletes the current session; other logins remain valid. Revocation persists across process restart. Changing the signing key invalidates existing cookies. No refresh, password reset or email verification flow is included.
+
+Passwords require at least 8 Unicode code points and at most 72 UTF-8 bytes; NUL is rejected and passwords are not trimmed. Bcrypt cost is 12. Email is trimmed/lowercased and uniquely indexed; duplicate registrations return safe 409 `REGISTRATION_CONFLICT`. Login failures for wrong, unknown or suspended accounts return the same 401 `INVALID_CREDENTIALS`. Registration conflict can reveal that an email cannot be registered; this is a documented MVP limitation, not a claim of complete enumeration resistance.
+
+JSON success/error envelopes remain consistent. User responses contain only id, name, email, role and status. Bodies are limited to 16 KB; errors omit raw input, connection details and stacks. Helmet and no-store headers remain. Logs contain method/status/duration only. Login/register share 10 attempts per 15 minutes per IP, including successful attempts; general API traffic allows 100/minute/IP. Health probes bypass general limits. Limits are process-local and trust proxy is disabled; review proxy handling/shared storage before scaling.
+
+## Protected administrator setup
+
+Only a trusted operator with shell/database access may run `npm run setup:admin`. It is not a public API and never runs at application startup. In a private shell, supply `ADMIN_SETUP_CONFIRM=create-admin`, `ADMIN_NAME`, `ADMIN_EMAIL` and `ADMIN_PASSWORD`, plus normal API/database configuration. No default administrator or credentials are supplied. Do not put a password in a committed script, CLI argument, screenshot or shell history; use a secure environment injection mechanism. Remove those admin environment variables when finished.
+
+Setup creates one active admin with a bcrypt hash. A rerun for an existing active admin is a no-op: it does not reset their password. An existing customer, designer or suspended account causes a safe conflict, never promotion/reactivation. The command connects and closes explicitly, and logs only a sanitized outcome. Do not run it against test data unless the URI is the isolated test database. FR08 admin listing/suspension APIs are not part of M2.
+
+## Postman and manual verification
+
+Import `docs/postman/MYGARB_Backend.postman_collection.json` and `docs/postman/local.postman_environment.json`; select **MY GARB Local**. Its `baseUrl` is `http://localhost:5000/api`. Set `authPassword` privately to a valid demo password; exported defaults are blank and contain no credentials or tokens. The collection generates unique customer/designer emails. Keep the cookie jar enabled; login handles cookies automatically. Do not export populated secrets or cookie jars.
+
+Run the four M1 requests and the M2 folder in order. Expected M2 results: customer registration 201; duplicate 409; public admin registration 400; wrong login 401; valid login/me 200; logout 200; me after logout 401; designer registration/login/me/logout succeed. The run uses seven registration/login attempts; wait for the 15-minute limit before repeated full runs if needed. It creates demo users without deleting development records.
+
+Example registration body (replace placeholders locally):
+
+```json
+{"name":"Demo Customer","email":"unique-demo@example.test","password":"<private-demo-password>","role":"customer"}
 ```
 
-Edit `.env` before startup. `NODE_ENV` accepts development/test/production; `PORT` defaults to 5000. `MONGODB_URI` and `FRONTEND_ORIGINS` are required. Origins are comma-separated exact HTTP(S) origins without paths or trailing slashes. Example: `http://localhost:3000,http://localhost:5173`. No wildcard or credentialed CORS is enabled. CORS controls browser access to responses, not authentication.
+Login body: `{"email":"unique-demo@example.test","password":"<private-demo-password>"}`. Logout body: `{}`. All three need the security header above. Successful user envelope: `{"success":true,"data":{"user":{"id":"...","name":"Demo Customer","email":"unique-demo@example.test","role":"customer","status":"active"}}}`.
 
-### Local MongoDB and Compass
+After protected admin setup, manually send login/me with the private admin credentials and confirm role admin; no public admin route exists. For role/status and replay-after-logout checks, use the automated isolated tests rather than altering development users. Swagger auth calls require header value `1`, JSON input, an allowlisted browser origin and the browser cookie jar. A successful automated HTTP request is not a claim of manual browser verification.
 
-On Windows, install MongoDB Community Server as a service. Check `Get-Service MongoDB`; if stopped, run `Start-Service MongoDB` from an administrator terminal. On Linux with a service installation, use `sudo systemctl start mongod`. Alternatively, run `mongod --dbpath <data-directory>` in another terminal. Never delete or reset existing database files.
+Safe readiness-outage demo: use a separate MongoDB process on 27018 with a new temporary directory and a separate API on 5001 configured for `mygarb_phasonable_test`. Stop only that isolated MongoDB, wait for detection, and check ready=503/live=200. Restart it for recovery. Never stop a shared development database or reset data. The normal readiness Postman assertion intentionally expects 200 and fails during this demo.
 
-Connect Compass to `mongodb://127.0.0.1:27017`. Development uses `mongodb://127.0.0.1:27017/mygarb_phasonable`. The database appears in Compass after a later milestone writes data; this foundation creates no collections. Keep MongoDB bound to loopback.
+## Tests, structure and delivery
 
-### Commands
+Run `npm ci`, `npm run lint`, `npm test`. Tests connect only to the validated isolated local test database, do not load development `.env` into their database setup, and clean only their own authentication fixtures. Startup tests may initialize indexes; no database is dropped. Integration tests fail rather than silently skip when MongoDB is unavailable. Windows skips only the POSIX child-signal test; Ubuntu CI runs it.
 
-```text
-npm run dev     # watch mode
-npm start       # normal startup; set NODE_ENV=production in deployment environment
-npm run lint
-npm test
-```
+App creation, database lifecycle and startup remain in `src/app.js`, `src/config/database.js` and `src/server.js`. Authentication uses focused models, validators, services, middleware and routes. `scripts/setup-admin.js` is the explicit bootstrap entrypoint. Tests cover auth and the M1 regression; OpenAPI lives in `src/docs/openapi.json`.
 
-Tests require real MongoDB and default to `mongodb://127.0.0.1:27017/mygarb_phasonable_test`. `TEST_MONGODB_URI` may override the port but must use localhost/127.0.0.1 and exactly that database name. Tests do not load `.env`, write data, or drop databases. Unavailable MongoDB fails integration tests rather than silently skipping them.
-
-Startup validates configuration, connects MongoDB, then listens. Connection or port failures abort startup with a safe diagnostic. SIGINT/SIGTERM close HTTP and MongoDB; active HTTP requests get five seconds to drain. Readiness follows Mongoose connection state and driver heartbeat timing; it is not an immediate database ping.
-
-## API
-
-- Swagger UI: http://localhost:5000/api/docs
-- OpenAPI JSON: http://localhost:5000/api/docs.json
-- GET `/api/health/live`: 200, `{"success":true,"data":{"status":"alive"}}`
-- GET `/api/health/ready`: 200, `{"success":true,"data":{"status":"ready"}}`; disconnected: 503, `{"success":false,"error":{"code":"NOT_READY","message":"Service is not ready"}}`
-- Unknown route: 404, `{"success":false,"error":{"code":"NOT_FOUND","message":"Route not found"}}`
-
-All endpoints are public and need no body. JSON is bounded to 16 KB. Error envelopes use `{success:false,error:{code,message}}`. Malformed JSON returns 400; oversized bodies 413; unsupported encoding/charset 415; unexpected errors 500. Raw errors and stacks never enter responses. Helmet sets security headers. API responses disable caching. Logs contain only method, status, and duration, excluding URLs, headers, cookies, and bodies. Non-health API requests are limited to 100/minute/IP with JSON 429 responses; health probes are exempt. Trust proxy is disabled; configure it deliberately before proxy deployment. The limiter is process-local and needs a shared store before horizontal scaling.
-
-## Postman
-
-1. Import `docs/postman/MYGARB_Backend.postman_collection.json` and `docs/postman/local.postman_environment.json`.
-2. Select **MY GARB Local** (`baseUrl=http://localhost:5000/api`). Start MongoDB and the API.
-3. Run the collection: liveness, readiness, OpenAPI JSON, and unknown route each have response assertions.
-4. Safe readiness failure demo: run a separate `mongod` on port 27018 using a new temporary data directory. In a separate API terminal set `$env:PORT='5001'` and `$env:MONGODB_URI='mongodb://127.0.0.1:27018/mygarb_phasonable_test'`, then `npm start`. Point Postman to `http://localhost:5001/api`. Stop only the isolated MongoDB process, wait for driver detection, and send Readiness (503) and Liveness (200). The normal readiness assertion intentionally fails in this demo. Restart the isolated MongoDB and wait for readiness recovery. Never stop a shared development database for a demonstration.
-
-## Structure and workflow
-
-```text
-src/app.js              Importable Express factory
-src/server.js           Startup and graceful shutdown
-src/config/             Environment and database lifecycle
-src/routes/             Health routes
-src/middleware/         Error and 404 handling
-src/docs/               OpenAPI specification
-tests/                  HTTP and real MongoDB tests
-docs/postman/           Collection and local environment
-docs/milestones/        Scope, evidence, next prompt
-.github/workflows/      CI with MongoDB service
-```
-
-`main` holds stable approved code; `develop` integrates milestones. This milestone uses `feature/milestone-01-backend-foundation`. PRs target `develop`; review before merging and promote to `main` separately. Never force-push. CI runs `npm ci`, lint, and tests with MongoDB 8.0 and read-only repository permissions. See the test report for actual local and CI results.
-
-## Limitations
-
-No deployment infrastructure or business functionality is included. Read the PRD and obtain explicit approval before Milestone 2. The user confirmed successful manual health endpoint and Swagger checks on 26 October 2026; see the test report. Compass GUI testing remains unverified. Latest local verification passed with 17 tests passed, 0 failed, and 1 Windows-only skip; current-commit CI and human approval must be verified separately.
+M2 uses `feature/milestone-02-authentication-rbac` and a PR targeting `develop`. Keep `.env` and `AGENTS.md` ignored/untracked. CI runs Node 24 with MongoDB 8.0. Check the exact pushed SHA, review and request separate merge authorization. `main` remains stable. See the actual M2 report for local/CI results and limitations; M3 is only a prepared prompt, not implementation approval.

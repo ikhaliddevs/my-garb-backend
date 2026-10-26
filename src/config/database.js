@@ -1,8 +1,15 @@
 const mongoose = require('mongoose');
+const { createAuthModels } = require('../models/auth');
 
 function createDatabase() {
   const client = new mongoose.Mongoose();
+  const models = createAuthModels(client);
   return {
+    models,
+    prepareAuth: async () => {
+      await models.User.createIndexes();
+      await models.Session.createIndexes();
+    },
     isReady: () => client.connection.readyState === 1,
     async connect(uri) {
       try {

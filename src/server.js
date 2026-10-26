@@ -4,9 +4,10 @@ const { createDatabase } = require('./config/database');
 
 async function startServer({ config = loadConfig(), database = createDatabase(), logger = console } = {}) {
   await database.connect(config.mongoUri);
-  const app = createApp({ config, database, logger });
   let server;
   try {
+    await database.prepareAuth();
+    const app = createApp({ config, database, logger });
     server = await new Promise((resolve, reject) => {
       const listener = app.listen(config.port, error => error ? reject(error) : resolve(listener));
       listener.once('error', reject);
