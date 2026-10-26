@@ -4,7 +4,7 @@
 
 Create a maintainable, tested CommonJS Express foundation for continued milestone development and weekly demonstrations. Delivered environment validation, local Mongoose connectivity, HTTP lifecycle, safe middleware, liveness/readiness, OpenAPI/Swagger, Postman examples, real database tests, and GitHub Actions.
 
-Status as of 24 October 2026: implementation and local verification passed (17 tests passed, 0 failed, 1 Windows-only skip). The implementation commit in current history is `91848b61f0ef32a2f838c544215d061b20662520`; the reviewed documentation baseline is `ef313566f444bcd77876572ddb6e14cfd55cd958`. Historical CI evidence uses an earlier commit identifier and does not certify the latest documentation commit. [PR #1](https://github.com/ikhaliddevs/my-garb-backend/pull/1) is recorded as targeting develop and awaiting human review, unmerged. Current remote status and CI require verification; see M1-test-report.md. This is not merge authorization.
+Status as of 26 October 2026: implementation and local verification passed (17 tests passed, 0 failed, 1 Windows-only skip). The implementation commit in current history is `91848b61f0ef32a2f838c544215d061b20662520`; the reviewed documentation baseline is `ef313566f444bcd77876572ddb6e14cfd55cd958`. Historical CI evidence uses an earlier commit identifier and does not certify the latest documentation commit. [PR #1](https://github.com/ikhaliddevs/my-garb-backend/pull/1) is recorded as targeting develop and awaiting human review, unmerged. The user confirmed successful manual health endpoint and Swagger checks on 26 October. Delivery baseline `b50c720` passed PR and push CI; final documentation commit checks are recorded in PR #1 after publication. See M1-test-report.md. This is not merge authorization.
 
 ## Requirements and decisions
 
@@ -38,9 +38,10 @@ Use Node 24, run `npm ci`, copy `.env.example` to `.env`, start local MongoDB, t
 - [x] Clean install, lint, and local tests executed successfully; platform-specific signal test explicitly reported.
 - [x] CI workflow, setup documentation, AGENTS rules, milestone reports, next prompt.
 - [x] Historical feature publication, PR #1 targeting develop, and historical push/PR CI success recorded.
-- [ ] Verify PR status and CI for the latest pushed documentation commit.
+- [x] User-confirmed manual health endpoint and Swagger checks (26 October 2026).
+- Latest-commit CI verification is recorded in PR #1 after the final documentation push.
 - [ ] Human review/approval (no merge performed).
 
 ## Limitations
 
-Remote access was restored during delivery: PR #1 was verified open, unmerged, targeting develop, and baseline `ef31356` passed PR and push CI (see the test report). CI for the subsequent documentation commit must be checked after publication; its result is recorded in the PR delivery evidence. Rate limiting is per-process; proxy trust is disabled. Readiness follows driver heartbeat timing. Postman/Compass GUI and Swagger browser interaction were not manually exercised. Windows cannot exercise POSIX child signals; Ubuntu CI is configured to run that test. No business persistence or deployment infrastructure is included. Stop after M1 and wait for explicit M2 approval.
+Remote access was restored during delivery: PR #1 was verified open, unmerged, targeting develop, and baseline `ef31356` passed PR and push CI (see the test report). CI for the subsequent documentation commit must be checked after publication; its result is recorded in the PR delivery evidence. Rate limiting is per-process; proxy trust is disabled. Readiness follows driver heartbeat timing. Manual health endpoint and Swagger checks were confirmed by the user. Compass GUI interaction was not confirmed; no business persistence is included in M1. Windows cannot exercise POSIX child signals; Ubuntu CI is configured to run that test. No business persistence or deployment infrastructure is included. Stop after M1 and wait for explicit M2 approval.

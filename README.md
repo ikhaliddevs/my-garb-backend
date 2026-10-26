@@ -69,4 +69,4 @@ docs/milestones/        Scope, evidence, next prompt
 
 ## Limitations
 
-No deployment infrastructure or business functionality is included. Read the PRD and obtain explicit approval before Milestone 2. Automated HTTP checks do not imply Compass or Postman GUI testing. Latest local verification passed with 17 tests passed, 0 failed, and 1 Windows-only skip; current-commit CI and human approval must be verified separately.
+No deployment infrastructure or business functionality is included. Read the PRD and obtain explicit approval before Milestone 2. The user confirmed successful manual health endpoint and Swagger checks on 26 October 2026; see the test report. Compass GUI testing remains unverified. Latest local verification passed with 17 tests passed, 0 failed, and 1 Windows-only skip; current-commit CI and human approval must be verified separately.

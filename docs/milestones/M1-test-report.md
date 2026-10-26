@@ -1,6 +1,6 @@
 # Milestone 1 test report
 
-Original implementation verification: 2026-10-16. Latest local review: 2026-10-24 (Africa/Lagos).
+Original implementation verification: 2026-10-16. Latest automated local review: 2026-10-24. Manual verification confirmation: 2026-10-26 (Africa/Lagos).
 
 ## Environment and latest local results
 
@@ -16,6 +16,14 @@ Windows PowerShell; Node v26.3.1; npm 11.16.0; installed MongoDB Community Serve
 The one local skip is the POSIX SIGTERM process test: Windows child.kill force-terminates instead of delivering a POSIX signal. Real HTTP/database graceful closure and idempotence passed locally. Ubuntu CI is configured to run the signal test without skipping.
 
 These checks were executed during the 24 October review at `ef313566f444bcd77876572ddb6e14cfd55cd958`, with the supplied PRD present locally. This delivery follow-up changes documentation only; application code, tests, dependencies, lockfile and CI configuration are unchanged. The original 16 October run also had 17 passed, 0 failed and 1 skipped, in 7.773 seconds; its clean install reported zero vulnerabilities. The latest install again warned that the optional `@scarf/scarf` postinstall script was not approved; install and checks passed without approving it. MongoDB was running for the latest tests; its installed version was recorded during the original verification, not re-queried during this review.
+
+## Manual verification (user-reported)
+
+On 26 October 2026, the user confirmed successful manual health endpoint and Swagger checks. This records the user's confirmation, not a new automated run or an agent-observed browser session. No screenshots or detailed request transcript were supplied. The local API URL is http://localhost:5000/api and Swagger UI is http://localhost:5000/api/docs/.
+
+The preceding agent HTTP verification returned 200 for liveness, readiness and OpenAPI JSON; the OpenAPI title was MY GARB PHASONABLE Backend and the specification used OpenAPI 3.0.3. The user confirmation closes the outstanding manual health/Swagger verification item. Compass interaction and an isolated outage demonstration were not explicitly confirmed and are not claimed here; automated database disconnection/readiness coverage is recorded below.
+
+This finalization changes documentation only and retains the actual local automated result: 17 passed, 0 failed, 1 Windows-only skip. No additional local test run is implied.
 
 ## Cases
 
@@ -64,6 +72,8 @@ During the 24 October review, GitHub CLI was unavailable, the credential lookup 
 
 During the delivery follow-up, remote access succeeded outside the sandbox using Windows curl with the existing credential helper. PR #1 was verified open, unmerged, targeting develop, with head `ef313566f444bcd77876572ddb6e14cfd55cd958` before publication. Baseline [PR CI 38932916642](https://github.com/ikhaliddevs/my-garb-backend/actions/runs/38932916642) and [push CI 38932911907](https://github.com/ikhaliddevs/my-garb-backend/actions/runs/38932911907) both passed, including clean install, lint and tests. This resolves the earlier access limitation for the baseline; CI for the subsequent documentation commit is checked after push and recorded in the PR delivery evidence.
 
+Documentation delivery commit `b50c720d71aa2a3ba1d1ce26118e218ab9aab2bb` subsequently passed [PR CI 40199306331](https://github.com/ikhaliddevs/my-garb-backend/actions/runs/40199306331) and [push CI 40199303859](https://github.com/ikhaliddevs/my-garb-backend/actions/runs/40199303859), including install, lint and tests. The final manual-verification documentation commit is verified after push; its exact SHA and check results are recorded in PR #1 to avoid a self-referential commit identifier in this report. Human review and approval remain required.
+
 Original implementation publication commands executed successfully: `git diff --cached --check`, `git commit -m "feat: establish milestone 1 backend foundation"`, `git push -u origin feature/milestone-01-backend-foundation`, `node .tmp/github.cjs pr`, and `node .tmp/github.cjs ci`. The ignored helper called GitHub REST because GitHub CLI was not installed. Those commands are historical evidence, not a claim about the latest documentation push.
 
-Postman and Compass GUI interaction and Swagger browser interaction were not executed; the import artifacts and HTTP documentation responses are provided and tested as described above. No separate Node 24 local run was performed; historical CI supplies that runtime evidence. No destructive test cleanup or development database reset occurred. No authentication or future milestone work was performed. The supplied PRD v1.1 is now included at `docs/PRD.md`; its section 10 foundation requirements were reviewed against the implementation, as mapped in M1-summary.md. Product-wide acceptance criteria remain outside M1.
+Manual health endpoint and Swagger checks are now confirmed by the user as recorded above. Compass GUI interaction remains unverified; M1 creates no business collections. No separate Node 24 local run was performed; historical CI supplies that runtime evidence. No destructive test cleanup or development database reset occurred. No authentication or future milestone work was performed. The supplied PRD v1.1 is now included at `docs/PRD.md`; its section 10 foundation requirements were reviewed against the implementation, as mapped in M1-summary.md. Product-wide acceptance criteria remain outside M1.
