@@ -1,0 +1,11 @@
+# Copy-ready Milestone 2 prompt
+
+Implement Milestone 2 only for MY GARB PHASONABLE: authentication and role-based access. Begin only after explicit approval. Read local AGENTS.md, README, M1-summary.md, M1-test-report.md, and docs/PRD.md (v1.1). Use FR01 and section 10 for customer, designer and admin roles, registration/login requirements, and account lifecycle; confirm the detailed M2 scope before implementation. Resolve remaining M1 verification blockers first. This prepared prompt is not approval to begin M2.
+
+Preserve the CommonJS Express/Mongoose foundation, app factory, environment validation, safe error envelopes, middleware, health endpoints, graceful shutdown, OpenAPI, Postman, and MongoDB CI. Inspect git status and branches; create a milestone feature branch from approved develop without overwriting unrelated work. Do not merge the M1 PR yourself.
+
+Implement only PRD-approved authentication and role authorization. Add a validated User model, unique normalized identity, secure password hashing, safe credential verification, authentication middleware, and explicit authorization rules. Define session/token lifetime, secrets, logout/revocation, and refresh behavior according to the PRD. Prevent password/hash leakage, privilege escalation, mass assignment, and inappropriate account enumeration. Add focused authentication abuse limits. Do not invent roles or implement unrelated business endpoints.
+
+Use the dedicated test database and preserve development data. Test registration/login success and failure, duplicate identity, invalid credentials, unauthorized requests, insufficient roles, and expired/invalid credentials using real MongoDB where applicable. Keep M1 tests passing. Update OpenAPI, Postman, README, AGENTS.md, environment placeholders, milestone summary, and test report. Execute npm ci, npm run lint, and npm test; report actual local results separately from CI.
+
+After required local checks pass, inspect the diff for secrets/scope, commit, push, and open a PR targeting develop. Inspect CI and fix change-related failures. Do not merge or begin Milestone 3. Return setup, request examples, test evidence, commit/PR details, limitations, and a proposed next prompt, then wait for explicit approval.
