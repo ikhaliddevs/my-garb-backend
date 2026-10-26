@@ -56,6 +56,8 @@ M2 Postman/Swagger browser authentication interaction was not manually executed 
 
 ## CI and delivery
 
-GitHub Actions runs Node 24 with a real MongoDB 8.0 service, clean install, lint and tests. Both PR and M2-branch push triggers are configured. Before publication, latest-commit CI cannot be certified; after push, exact SHA and run results are recorded in the PR description and handoff. A blocked or failed run must be reported and resolved rather than replaced by historical M1 evidence.
+Implementation commit: `32f5ff42e4b87415ab4a40642fb04d2a8ca1cf1e`. [PR #2](https://github.com/ikhaliddevs/my-garb-backend/pull/2) is open, targets `develop` and is unmerged. GitHub Actions ran Node 24 with a real MongoDB 8.0 service. Both [PR run 40262023003](https://github.com/ikhaliddevs/my-garb-backend/actions/runs/40262023003) and [push run 40261809850](https://github.com/ikhaliddevs/my-garb-backend/actions/runs/40261809850) completed successfully for this implementation SHA, including clean install, lint and tests. CI log summaries confirm **33 tests passed, 0 failed, 0 skipped**, including the POSIX shutdown test. These results are separate from the Windows results above.
 
-Open the M2 PR against develop after local verification. Do not merge or begin M3. Human review and separate merge authorization remain required. See M2-summary.md for implementation choices, limits and setup references; M3-codex-prompt.md contains proposed next scope only.
+This documentation follow-up records those executed results without changing application code. Its own latest pushed SHA and check results are verified after publication and recorded in PR #2 and the final handoff; the implementation runs are not substituted for checks on a later commit.
+
+PR #2 is published against develop. Do not merge or begin M3. Human review and separate merge authorization remain required. See M2-summary.md for implementation choices, limits and setup references; M3-codex-prompt.md contains proposed next scope only.

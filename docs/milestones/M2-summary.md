@@ -1,5 +1,7 @@
 ﻿# Milestone 2: Authentication and role-based access
 
+Implementation commit `32f5ff42e4b87415ab4a40642fb04d2a8ca1cf1e` is published in [PR #2](https://github.com/ikhaliddevs/my-garb-backend/pull/2), targeting develop, open and unmerged. Local checks passed (32 passed, 0 failed, 1 Windows skip); implementation PR/push CI passed (33 passed, 0 failed, 0 skipped). Final documentation-commit checks are recorded in the PR after publication. Human review and manual authentication verification remain pending.
+
 ## Scope delivered
 
 M2 implements PRD v1.1 FR01 and the authentication milestone in section 10 on `feature/milestone-02-authentication-rbac`, based on approved M1 merge `5fc1f38efcd71f91cd63842c788b62cad6b23449`. M1 manual checks were user-confirmed; M2 manual Postman/Swagger authentication verification is not claimed.
