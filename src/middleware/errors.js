@@ -1,3 +1,11 @@
+class HttpError extends Error {
+  constructor(status, code, message) {
+    super(message);
+    this.status = status;
+    this.code = code;
+  }
+}
+
 function notFound(req, res) {
   res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Route not found' } });
 }
@@ -5,6 +13,7 @@ function notFound(req, res) {
 // Express recognizes error middleware by its four arguments.
 function errorHandler(error, req, res, next) {
   if (res.headersSent) return next(error);
+  if (error instanceof HttpError) return res.status(error.status).json({ success: false, error: { code: error.code, message: error.message } });
   const known = {
     'entity.parse.failed': [400, 'INVALID_JSON', 'Malformed JSON body'],
     'entity.too.large': [413, 'BODY_TOO_LARGE', 'Request body exceeds limit'],
@@ -17,4 +26,4 @@ function errorHandler(error, req, res, next) {
   res.status(status).json({ success: false, error: { code, message } });
 }
 
-module.exports = { notFound, errorHandler };
+module.exports = { notFound, errorHandler, HttpError };

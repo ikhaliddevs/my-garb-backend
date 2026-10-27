@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [develop, main]
   push:
-    branches: [develop, main, feature/milestone-01-backend-foundation]
+    branches: [develop, main, feature/milestone-01-backend-foundation, feature/milestone-02-authentication-rbac]
 permissions:
   contents: read
 jobs:

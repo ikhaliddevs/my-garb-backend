@@ -74,13 +74,13 @@ test('logging excludes URL query, authorization, cookies, and payload', async ()
 test('OpenAPI and Swagger UI are served', async () => {
   const response = await request(app).get('/api/docs.json').expect(200);
   assert.equal(response.body.openapi, '3.0.3');
-  assert.deepEqual(Object.keys(response.body.paths).sort(), ['/api/health/live', '/api/health/ready']);
+  assert.deepEqual(Object.keys(response.body.paths).sort(), ['/api/auth/login', '/api/auth/logout', '/api/auth/me', '/api/auth/register', '/api/health/live', '/api/health/ready']);
   const ui = await request(app).get('/api/docs/').expect(200);
   assert.match(ui.text, /swagger-ui/);
   await request(app).get('/api/docs/swagger-ui-init.js').expect(200);
 });
 test('configuration rejects invalid values without reflecting secrets', () => {
-  const env = { MONGODB_URI: 'mongodb://127.0.0.1/test', FRONTEND_ORIGINS: 'http://localhost:3000' };
+  const env = { JWT_SECRET: 'a'.repeat(64), MONGODB_URI: 'mongodb://127.0.0.1/test', FRONTEND_ORIGINS: 'http://localhost:3000' };
   assert.equal(validateEnv(env).port, 5000);
   for (const invalid of [{ PORT: '-1' }, { PORT: 'abc' }, { NODE_ENV: 'other' }, { MONGODB_URI: 'secret' }, { FRONTEND_ORIGINS: '*' }, { FRONTEND_ORIGINS: 'http://localhost:3000/path' }]) {
     assert.throws(() => validateEnv({ ...env, ...invalid }), error => !error.message.includes('secret'));

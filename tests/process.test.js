@@ -23,7 +23,7 @@ test('SIGTERM drains the running process on platforms with POSIX signals', { ski
   const port = probe.address().port;
   await new Promise(resolve => probe.close(resolve));
   const child = spawn(process.execPath, ['src/server.js'], {
-    env: { ...process.env, NODE_ENV: 'test', PORT: String(port), MONGODB_URI: process.env.TEST_MONGODB_URI || 'mongodb://127.0.0.1:27017/mygarb_phasonable_test', FRONTEND_ORIGINS: 'http://localhost:3000' },
+    env: { ...process.env, NODE_ENV: 'test', JWT_SECRET: 'b'.repeat(64), PORT: String(port), MONGODB_URI: process.env.TEST_MONGODB_URI || 'mongodb://127.0.0.1:27017/mygarb_phasonable_test', FRONTEND_ORIGINS: 'http://localhost:3000' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   const exit = once(child, 'exit');
