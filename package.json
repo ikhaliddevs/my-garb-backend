@@ -12,7 +12,8 @@
     "dev": "node --watch src/server.js",
     "lint": "eslint .",
     "test": "node --test --test-concurrency=1 tests/*.test.js",
-    "setup:admin": "node scripts/setup-admin.js"
+    "setup:admin": "node scripts/setup-admin.js",
+    "test:postman": "node scripts/test-postman.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -26,10 +27,18 @@
     "mongoose": "^9.11.2",
     "swagger-ui-express": "^5.0.1"
   },
+  "overrides": {
+    "newman": {
+      "postman-runtime": {
+        "handlebars": "4.7.10"
+      }
+    }
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.13.0",
     "globals": "^17.13.0",
+    "newman": "6.2.3",
     "supertest": "^7.3.1"
   }
 }
