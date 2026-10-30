@@ -1,5 +1,41 @@
 ﻿# Milestone 2 test report
 
+## Local Postman automation follow-up — 30 October 2026
+
+Delivery status correction: GitHub inspection on 30 October confirmed PR #2 was already merged on 27 October at 14:14:32 UTC (15:14:32 Africa/Lagos), merge commit `e35459d82dcb6539fcfe1c1c3c0b68f9bfef2d3a`. Earlier open/unmerged statements below describe the original handoff and were stale. The Postman follow-up is prepared on the same M2 branch; its latest commit and CI evidence are recorded on GitHub after publication. No merge is performed by this follow-up. The remaining development findings are assessed as non-blocking for trusted M2 functional scope, subject to reviewer acceptance; see the approval assessment in the dependency report.
+
+Later dependency remediation on the same date: the scoped Handlebars 4.7.8 → 4.7.10 patch removed the critical finding. Current full audit: 18 (11 high, 7 moderate, 0 critical), production: 0. Clean install/lint passed; rerun integration tests: 32 passed, 0 failed, 1 Windows skip (32.141s); Newman: 29 requests/94 assertions, zero failures. The earlier 19-finding result below is historical. See [dependency investigation and verification](M2-dependency-audit.md) for paths, compatible options, remaining risks and exact checks.
+
+New local execution only; no new CI or manual GUI result is claimed. Branch: `feature/milestone-02-authentication-rbac`, base HEAD `4e7cbbd12e01b02a8295cd425a9eadfe1be1482f`. This follow-up is uncommitted/unpublished; no merge or next-milestone work occurred.
+
+Inspected collection/environment, M2 reports, PRD, OpenAPI 0.2.0 and authentication implementation. Expanded from 12 to 25 M2 requests, retaining four M1 requests. Added exact envelopes, identity/role/status assertions, cookie flags, registration-without-login, revoked-cookie replay, repeated logout, security/validation rejections and default rate-limit coverage. Every M2 request has a description and fictional response example without Set-Cookie. See the [request guide](../postman/README.md).
+
+Runner: `npm.cmd run test:postman`, pinned Newman 6.2.3, Windows PowerShell, Node v26.3.1 and real MongoDB. It starts the actual application on a free loopback port with normal middleware/default limits, verifies served OpenAPI title/version/login path, and uses only validated local `mygarb_phasonable_test`. It never loads development `.env` or reuses the development server. Random credentials and a fresh Newman cookie jar remain in memory. Cleanup targets only two unique run-owned emails and their user IDs; no database reset/drop occurs.
+
+| Executed check | Actual result |
+| --- | --- |
+| Initial `npm.cmd ci --fetch-retries=0 --fetch-timeout=15000` | PASS; 207 packages in 39s, before Newman |
+| Final clean install, same command with updated lockfile | PASS; 327 packages in 59s; existing install-script approval warnings retained |
+| `npm.cmd run lint` | PASS; zero errors |
+| `npm.cmd test` | PASS; 33 total, 32 passed, 0 failed, 1 Windows signal skip; 25.282s |
+| First `npm.cmd run test:postman` | PASS; 29 requests, 94 assertions, 0 failed requests/assertions, 0 runner failures |
+| Repeat Newman run after clean install | PASS; 29 requests, 94 assertions, 0 failures with independent fixtures/cookies |
+| Cleanup, each Newman run | 2 owned users removed; 0 remaining sessions (logout already removed them) |
+| Unsafe database URI guard | PASS; non-test URI rejected with process exit 1 before connection |
+| `git diff --check` | PASS; line-ending notices only |
+| `.env` and `AGENTS.md` | Both ignored and untracked; `.env` unchanged |
+| `npm.cmd audit --omit=dev --fetch-retries=0 --fetch-timeout=15000` | PASS; 0 production vulnerabilities |
+
+Observed HTTP results in both Newman runs: M1 probes/docs 200 and unknown route 404; no session 401; missing header/unlisted Origin/cross-site metadata 403 each; non-JSON 415; customer registration 201; current user before login 401; duplicate 409; public admin registration 400; wrong credentials 401; customer login/me/logout 200 each; current user after logout/revoked-cookie replay/repeated logout 401 each; designer registration 201, login/me/logout 200 each, current user after logout 401; weak password/privileged field injection 400 each; unknown account 401; eleventh authentication attempt 429 with positive Retry-After. All expected rejection assertions passed.
+
+Failures/fixes: initial Newman download was blocked by sandbox registry access (EACCES); an authorized network retry installed it. Neither collection run had API/assertion failures. The old mostly status-only assertions were strengthened; email generation now occurs once per folder run for shared unique fixtures. Application implementation was unchanged.
+
+Unresolved dependency limitation: `npm audit fix` without force exited 1 and left **19 development-tool findings: 7 moderate, 11 high, 1 critical**. npm proposed a breaking Newman downgrade, which was not applied. These findings remain unresolved and are not labeled passed; review before adopting the tooling in CI. Production-only audit found zero vulnerabilities. The runner executes only the repository collection and suppresses raw Newman result/failure exports containing passwords/cookies; this does not eliminate dependency risk.
+
+Not executed by Newman: protected administrator CLI setup/login, manual Postman/Swagger GUI interaction, production HTTPS cookie behavior, or role-protected business/admin routes (none exist in M2). The newly executed integration suite separately covers administrator setup, role middleware, forged/expired sessions, account status/deletion, other-session preservation and restart revocation using isolated fixtures. No development administrator was created. Ubuntu CI evidence below is historical; no new CI/publication was requested. Human review and separate merge authorization remain pending.
+
+## Original milestone evidence
+
 Date: 26 October 2026 (Africa/Lagos). This report separates executed local tests, agent HTTP smoke checks, user/manual testing and remote CI. The PR description records the exact final pushed SHA and its CI runs after publication.
 
 ## Local environment and final results
