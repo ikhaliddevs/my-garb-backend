@@ -2,7 +2,15 @@
 
 Implementation commit `32f5ff42e4b87415ab4a40642fb04d2a8ca1cf1e` is published in [PR #2](https://github.com/ikhaliddevs/my-garb-backend/pull/2), targeting develop, open and unmerged. Local checks passed (32 passed, 0 failed, 1 Windows skip); implementation PR/push CI passed (33 passed, 0 failed, 0 skipped). Final documentation-commit checks are recorded in the PR after publication. Human review and manual authentication verification remain pending.
 
+Local follow-up, 30 October 2026: added `npm run test:postman` and expanded collection coverage. Two Newman runs each passed 29 requests and 94 assertions with run-owned fixture cleanup. Clean install/lint passed; integration suite: 32 passed, 0 failed, 1 Windows skip. Changes remain uncommitted/unpublished. Newman development dependency audit findings remain unresolved; production-only audit found none. See the latest [test report](M2-test-report.md) and [request guide](../postman/README.md). Manual GUI verification remains pending.
+
 ## Scope delivered
+
+CI recovery, verified 31 October: MongoDB's kernel guard caused the previous initialization failures. Pinning the CI runner to Ubuntu 22.04 resolved them; fix commit `f203187dce036f6f9b69d2336d40729dd173e22c` passed both push and PR checks, including install, lint, 33 integration tests (no skips) and 94 Postman assertions. See [CI repair report](M2-ci-repair.md). PR #3 remains open for review; no merge or M3 work is included.
+
+GitHub status verified 30 October: PR #2 was already merged on 27 October 2026, merge commit `e35459d82dcb6539fcfe1c1c3c0b68f9bfef2d3a`. Earlier open/unmerged references are historical. This Postman delivery continues on the existing M2 branch and performs no merge. Remaining development findings are non-blocking for trusted functional scope subject to reviewer acceptance, not an audit-clean certification; latest delivery/CI evidence is recorded on GitHub.
+
+Dependency follow-up: the scoped Handlebars 4.7.10 override fixes the Newman tree's critical finding. Remaining audit: 18 development findings (11 high, 7 moderate); production audit zero. Install/lint, integration and Postman checks passed again. See [audit investigation](M2-dependency-audit.md); the tooling is not claimed audit-clean.
 
 M2 implements PRD v1.1 FR01 and the authentication milestone in section 10 on `feature/milestone-02-authentication-rbac`, based on approved M1 merge `5fc1f38efcd71f91cd63842c788b62cad6b23449`. M1 manual checks were user-confirmed; M2 manual Postman/Swagger authentication verification is not claimed.
 

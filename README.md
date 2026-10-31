@@ -56,19 +56,11 @@ Setup creates one active admin with a bcrypt hash. A rerun for an existing activ
 
 ## Postman and manual verification
 
-Import `docs/postman/MYGARB_Backend.postman_collection.json` and `docs/postman/local.postman_environment.json`; select **MY GARB Local**. Its `baseUrl` is `http://localhost:5000/api`. Set `authPassword` privately to a valid demo password; exported defaults are blank and contain no credentials or tokens. The collection generates unique customer/designer emails. Keep the cookie jar enabled; login handles cookies automatically. Do not export populated secrets or cookie jars.
+Run `npm run test:postman` for automated M2 verification with Newman. The runner starts the actual API on a free loopback port against only local `mygarb_phasonable_test`, verifies the API contract, uses a fresh in-memory cookie jar and random fictional credentials, then cleans only its own users/sessions and closes the server. It does not load or modify development `.env`. The unchanged default rate limit is tested by the final expected 429 response.
 
-Run the four M1 requests and the M2 folder in order. Expected M2 results: customer registration 201; duplicate 409; public admin registration 400; wrong login 401; valid login/me 200; logout 200; me after logout 401; designer registration/login/me/logout succeed. The run uses seven registration/login attempts; wait for the 15-minute limit before repeated full runs if needed. It creates demo users without deleting development records.
+Import `docs/postman/MYGARB_Backend.postman_collection.json` and `docs/postman/local.postman_environment.json` into Postman and select **MY GARB Local**. For GUI execution, point `baseUrl` at a separately configured local test API, use a fresh cookie jar, and run the collection once in order. A blank `authPassword` generates an ephemeral fictional password for the run. Do not export populated credentials, cookies or raw execution reports. GUI runs retain their fictional accounts; the automated runner cleans its own fixtures. Wait 15 minutes before repeating GUI runs after the final rate-limit test.
 
-Example registration body (replace placeholders locally):
-
-```json
-{"name":"Demo Customer","email":"unique-demo@example.test","password":"<private-demo-password>","role":"customer"}
-```
-
-Login body: `{"email":"unique-demo@example.test","password":"<private-demo-password>"}`. Logout body: `{}`. All three need the security header above. Successful user envelope: `{"success":true,"data":{"user":{"id":"...","name":"Demo Customer","email":"unique-demo@example.test","role":"customer","status":"active"}}}`.
-
-After protected admin setup, manually send login/me with the private admin credentials and confirm role admin; no public admin route exists. For role/status and replay-after-logout checks, use the automated isolated tests rather than altering development users. Swagger auth calls require header value `1`, JSON input, an allowlisted browser origin and the browser cookie jar. A successful automated HTTP request is not a claim of manual browser verification.
+The collection contains four M1 requests and 25 M2 requests with exact success/error assertions, cookie/logout/replay checks, descriptions and safe fictional response examples. See [Postman request guide](docs/postman/README.md) for import steps, bodies, expected statuses and administrator limitations, and [M2 test report](docs/milestones/M2-test-report.md) for actual results. No public administrator route exists; protected administrator setup and role middleware are covered separately by the integration suite. Automated Newman execution does not constitute manual browser verification.
 
 Safe readiness-outage demo: use a separate MongoDB process on 27018 with a new temporary directory and a separate API on 5001 configured for `mygarb_phasonable_test`. Stop only that isolated MongoDB, wait for detection, and check ready=503/live=200. Restart it for recovery. Never stop a shared development database or reset data. The normal readiness Postman assertion intentionally expects 200 and fails during this demo.
 

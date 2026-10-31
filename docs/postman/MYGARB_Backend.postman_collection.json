@@ -2,7 +2,7 @@
   "info": {
     "name": "MY GARB Backend - Milestones 1 and 2",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Start API and MongoDB; select MY GARB Local. Set authPassword privately before running. Authentication POSTs send X-MYGARB-Request: 1 and JSON. Login stores HttpOnly cookie in the Postman cookie jar; logout revokes it. Do not export populated credentials or cookies. The collection creates new customer/designer demo records; it does not delete development data. Registration generates unique local emails. Full run stays within the default 10 auth attempts/15 minutes; repeated runs may require waiting."
+    "description": "M1/M2 actual API requests. Run once in order with a fresh cookie jar and fresh rate-limit budget. Recommended: npm run test:postman (local test database, random in-memory password, owned fixture cleanup). GUI runs generate fictional emails and an ephemeral password unless authPassword is privately supplied. GUI accounts remain in the selected server database. Final request intentionally exhausts the default auth limit; wait 15 minutes before another GUI run. Never export populated environments, cookies, or raw run reports. No public admin endpoint exists. See docs/postman/README.md."
   },
   "auth": {
     "type": "noauth"
@@ -98,7 +98,384 @@
     },
     {
       "name": "M2 Authentication",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.variables.get('m2Initialized')) {",
+              "  if (pm.environment.get('fixtureMode') !== 'runner') { const id=pm.variables.replaceIn('{{$guid}}'); pm.environment.set('customerEmail','customer-'+id+'@example.test'); pm.environment.set('designerEmail','designer-'+id+'@example.test'); }",
+              "  pm.variables.set('authPassword', pm.environment.get('authPassword') || pm.variables.replaceIn('{{$guid}}') + '-Demo!');",
+              "  pm.variables.set('m2Initialized',true);",
+              "}"
+            ]
+          }
+        }
+      ],
       "item": [
+        {
+          "name": "Unauthenticated current user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Unauthenticated current user. Expected HTTP 401 / UNAUTHENTICATED. Run in folder order using the cookie jar. No bearer token is used."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"UNAUTHENTICATED\",\"message\":\"Authentication required\"}}));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (401)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/auth/me",
+                "description": "Unauthenticated current user. Expected HTTP 401 / UNAUTHENTICATED. Run in folder order using the cookie jar. No bearer token is used."
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"UNAUTHENTICATED\",\n    \"message\": \"Authentication required\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Missing security header",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Missing security header. Expected HTTP 403 / CSRF_REJECTED. Run in folder order using the cookie jar. No bearer token is used.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"CSRF_REJECTED\",\"message\":\"Request origin or security header rejected\"}}));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (403)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/login",
+                "description": "Missing security header. Expected HTTP 403 / CSRF_REJECTED. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"CSRF_REJECTED\",\n    \"message\": \"Request origin or security header rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Unlisted origin rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              },
+              {
+                "key": "Origin",
+                "value": "https://untrusted.example.test"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Unlisted origin rejected. Expected HTTP 403 / CSRF_REJECTED. Run in folder order using the cookie jar. No bearer token is used.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"CSRF_REJECTED\",\"message\":\"Request origin or security header rejected\"}}));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (403)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  },
+                  {
+                    "key": "Origin",
+                    "value": "https://untrusted.example.test"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/login",
+                "description": "Unlisted origin rejected. Expected HTTP 403 / CSRF_REJECTED. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"CSRF_REJECTED\",\n    \"message\": \"Request origin or security header rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Cross-site metadata rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              },
+              {
+                "key": "Sec-Fetch-Site",
+                "value": "cross-site"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Cross-site metadata rejected. Expected HTTP 403 / CSRF_REJECTED. Run in folder order using the cookie jar. No bearer token is used.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"CSRF_REJECTED\",\"message\":\"Request origin or security header rejected\"}}));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (403)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  },
+                  {
+                    "key": "Sec-Fetch-Site",
+                    "value": "cross-site"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/login",
+                "description": "Cross-site metadata rejected. Expected HTTP 403 / CSRF_REJECTED. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"CSRF_REJECTED\",\n    \"message\": \"Request origin or security header rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Non-JSON body rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "text/plain"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Non-JSON body rejected. Expected HTTP 415 / JSON_REQUIRED. Run in folder order using the cookie jar. No bearer token is used.",
+            "body": {
+              "mode": "raw",
+              "raw": "email=fictional",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 415', () => pm.response.to.have.status(415));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"JSON_REQUIRED\",\"message\":\"Content-Type must be application/json\"}}));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (415)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "text/plain"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/login",
+                "description": "Non-JSON body rejected. Expected HTTP 415 / JSON_REQUIRED. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "email=fictional",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"JSON_REQUIRED\",\n    \"message\": \"Content-Type must be application/json\"\n  }\n}"
+            }
+          ]
+        },
         {
           "name": "Register customer",
           "request": {
@@ -114,9 +491,10 @@
               }
             ],
             "url": "{{baseUrl}}/auth/register",
+            "description": "Register customer. Expected HTTP 201. Run in folder order using the cookie jar. No bearer token is used.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Demo Customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"customer\"\n}",
+              "raw": "{\n  \"name\": \"Demo customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"customer\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -126,24 +504,96 @@
           },
           "event": [
             {
-              "listen": "prerequest",
+              "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (!pm.environment.get('authPassword')) throw new Error('Set authPassword privately in your local Postman environment first');",
-                  "pm.environment.set('customerEmail', 'customer-' + Date.now() + '@example.test');"
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Exact safe user structure and identity', () => { const b=pm.response.json(); pm.expect(b).to.have.all.keys('success','data'); pm.expect(b.success).to.eql(true); pm.expect(b.data).to.have.all.keys('user'); const u=b.data.user; pm.expect(u).to.have.all.keys('id','name','email','role','status'); pm.expect(u.id).to.match(/^[a-f0-9]{24}$/); pm.expect(u.name).to.eql('Demo customer'); pm.expect(u.email).to.eql(pm.environment.get('customerEmail')); pm.expect(u.role).to.eql('customer'); pm.expect(u.status).to.eql('active'); pm.variables.set('customerId',u.id); });",
+                  "pm.test('Registration issues no session', () => pm.expect(pm.response.headers.has('Set-Cookie')).to.eql(false));"
                 ]
               }
-            },
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (201)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/register",
+                "description": "Register customer. Expected HTTP 201. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Demo customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"customer\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"507f1f77bcf86cd799439011\",\n      \"name\": \"Demo customer\",\n      \"email\": \"customer-fictional@example.test\",\n      \"role\": \"customer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Registration does not log in",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Registration does not log in. Expected HTTP 401 / UNAUTHENTICATED. Run in folder order using the cookie jar. No bearer token is used."
+          },
+          "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status', () => pm.response.to.have.status(201));",
-                  "pm.test('Safe customer user', () => { const u=pm.response.json().data.user; pm.expect(u.role).to.eql('customer'); pm.expect(u).not.to.have.property('passwordHash'); pm.expect(u).not.to.have.property('password'); });"
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"UNAUTHENTICATED\",\"message\":\"Authentication required\"}}));"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (401)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/auth/me",
+                "description": "Registration does not log in. Expected HTTP 401 / UNAUTHENTICATED. Run in folder order using the cookie jar. No bearer token is used."
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"UNAUTHENTICATED\",\n    \"message\": \"Authentication required\"\n  }\n}"
             }
           ]
         },
@@ -162,9 +612,10 @@
               }
             ],
             "url": "{{baseUrl}}/auth/register",
+            "description": "Duplicate customer rejected. Expected HTTP 409 / REGISTRATION_CONFLICT. Run in folder order using the cookie jar. No bearer token is used.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Demo Customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"customer\"\n}",
+              "raw": "{\n  \"name\": \"Demo customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"customer\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -178,9 +629,49 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status', () => pm.response.to.have.status(409));"
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"REGISTRATION_CONFLICT\",\"message\":\"Unable to register with these details\"}}));"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (409)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/register",
+                "description": "Duplicate customer rejected. Expected HTTP 409 / REGISTRATION_CONFLICT. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Demo customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"customer\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"REGISTRATION_CONFLICT\",\n    \"message\": \"Unable to register with these details\"\n  }\n}"
             }
           ]
         },
@@ -199,9 +690,10 @@
               }
             ],
             "url": "{{baseUrl}}/auth/register",
+            "description": "Public admin registration rejected. Expected HTTP 400 / INVALID_INPUT. Run in folder order using the cookie jar. No bearer token is used.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Not an Admin\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"admin\"\n}",
+              "raw": "{\n  \"name\": \"Demo customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"admin\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -215,9 +707,49 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status', () => pm.response.to.have.status(400));"
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"INVALID_INPUT\",\"message\":\"Invalid authentication input\"}}));"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (400)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/register",
+                "description": "Public admin registration rejected. Expected HTTP 400 / INVALID_INPUT. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Demo customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"admin\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_INPUT\",\n    \"message\": \"Invalid authentication input\"\n  }\n}"
             }
           ]
         },
@@ -236,6 +768,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/login",
+            "description": "Wrong credentials rejected. Expected HTTP 401 / INVALID_CREDENTIALS. Run in folder order using the cookie jar. No bearer token is used.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"Deliberately-wrong-demo-password\"\n}",
@@ -252,9 +785,49 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status', () => pm.response.to.have.status(401));"
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"INVALID_CREDENTIALS\",\"message\":\"Invalid email or password\"}}));"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (401)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/login",
+                "description": "Wrong credentials rejected. Expected HTTP 401 / INVALID_CREDENTIALS. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"Deliberately-wrong-demo-password\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_CREDENTIALS\",\n    \"message\": \"Invalid email or password\"\n  }\n}"
             }
           ]
         },
@@ -273,6 +846,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/login",
+            "description": "Login customer. Expected HTTP 200. Run in folder order using the cookie jar. No bearer token is used.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
@@ -289,10 +863,51 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
-                  "pm.test('Safe customer user', () => { const u=pm.response.json().data.user; pm.expect(u.role).to.eql('customer'); pm.expect(u).not.to.have.property('passwordHash'); pm.expect(u).not.to.have.property('password'); });"
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Exact safe user structure and identity', () => { const b=pm.response.json(); pm.expect(b).to.have.all.keys('success','data'); pm.expect(b.success).to.eql(true); pm.expect(b.data).to.have.all.keys('user'); const u=b.data.user; pm.expect(u).to.have.all.keys('id','name','email','role','status'); pm.expect(u.id).to.match(/^[a-f0-9]{24}$/); pm.expect(u.name).to.eql('Demo customer'); pm.expect(u.email).to.eql(pm.environment.get('customerEmail')); pm.expect(u.role).to.eql('customer'); pm.expect(u.status).to.eql('active'); pm.expect(u.id).to.eql(pm.variables.get('customerId')); });",
+                  "pm.test('Session cookie attributes', () => { const h=pm.response.headers.get('Set-Cookie') || ''; pm.expect(/^mygarb_session=[^;]+;/.test(h)).to.eql(true); for (const a of ['HttpOnly','SameSite=Strict','Path=/api']) pm.expect(h.includes(a)).to.eql(true); pm.expect(/;\\s*Domain=/i.test(h)).to.eql(false); });",
+                  "pm.variables.set('revokedCookie', (pm.response.headers.get('Set-Cookie') || '').split(';')[0]);"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (200)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/login",
+                "description": "Login customer. Expected HTTP 200. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"507f1f77bcf86cd799439011\",\n      \"name\": \"Demo customer\",\n      \"email\": \"customer-fictional@example.test\",\n      \"role\": \"customer\",\n      \"status\": \"active\"\n    }\n  }\n}"
             }
           ]
         },
@@ -301,7 +916,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/auth/me"
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Current customer. Expected HTTP 200. Run in folder order using the cookie jar. No bearer token is used."
           },
           "event": [
             {
@@ -309,10 +925,31 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
-                  "pm.test('Safe customer user', () => { const u=pm.response.json().data.user; pm.expect(u.role).to.eql('customer'); pm.expect(u).not.to.have.property('passwordHash'); pm.expect(u).not.to.have.property('password'); });"
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Exact safe user structure and identity', () => { const b=pm.response.json(); pm.expect(b).to.have.all.keys('success','data'); pm.expect(b.success).to.eql(true); pm.expect(b.data).to.have.all.keys('user'); const u=b.data.user; pm.expect(u).to.have.all.keys('id','name','email','role','status'); pm.expect(u.id).to.match(/^[a-f0-9]{24}$/); pm.expect(u.name).to.eql('Demo customer'); pm.expect(u.email).to.eql(pm.environment.get('customerEmail')); pm.expect(u.role).to.eql('customer'); pm.expect(u.status).to.eql('active'); pm.expect(u.id).to.eql(pm.variables.get('customerId')); });"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/auth/me",
+                "description": "Current customer. Expected HTTP 200. Run in folder order using the cookie jar. No bearer token is used."
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"507f1f77bcf86cd799439011\",\n      \"name\": \"Demo customer\",\n      \"email\": \"customer-fictional@example.test\",\n      \"role\": \"customer\",\n      \"status\": \"active\"\n    }\n  }\n}"
             }
           ]
         },
@@ -331,6 +968,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/logout",
+            "description": "Logout customer. Expected HTTP 200. Run in folder order using the cookie jar. No bearer token is used.",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -347,9 +985,50 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status', () => pm.response.to.have.status(200));"
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Logout envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":true,\"data\":{\"message\":\"Logged out\"}}));",
+                  "pm.test('Session cookie cleared with matching attributes', () => { const h=pm.response.headers.get('Set-Cookie') || ''; pm.expect(h.startsWith('mygarb_session=;')).to.eql(true); for (const a of ['HttpOnly','SameSite=Strict','Path=/api']) pm.expect(h.includes(a)).to.eql(true); const expiry=/Expires=([^;]+)/i.exec(h); pm.expect(Boolean(expiry) && Date.parse(expiry[1]) < Date.now()).to.eql(true); });"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (200)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/logout",
+                "description": "Logout customer. Expected HTTP 200. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Logged out\"\n  }\n}"
             }
           ]
         },
@@ -358,7 +1037,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/auth/me"
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Current user after logout rejected. Expected HTTP 401 / UNAUTHENTICATED. Run in folder order using the cookie jar. No bearer token is used."
           },
           "event": [
             {
@@ -366,9 +1046,162 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status', () => pm.response.to.have.status(401));"
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"UNAUTHENTICATED\",\"message\":\"Authentication required\"}}));"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (401)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/auth/me",
+                "description": "Current user after logout rejected. Expected HTTP 401 / UNAUTHENTICATED. Run in folder order using the cookie jar. No bearer token is used."
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"UNAUTHENTICATED\",\n    \"message\": \"Authentication required\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Revoked cookie replay rejected",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "{{revokedCookie}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Revoked cookie replay rejected. Expected HTTP 401 / UNAUTHENTICATED. Run in folder order using the cookie jar. No bearer token is used."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"UNAUTHENTICATED\",\"message\":\"Authentication required\"}}));",
+                  "pm.variables.unset('revokedCookie');"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (401)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Cookie",
+                    "value": "{{revokedCookie}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/me",
+                "description": "Revoked cookie replay rejected. Expected HTTP 401 / UNAUTHENTICATED. Run in folder order using the cookie jar. No bearer token is used."
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"UNAUTHENTICATED\",\n    \"message\": \"Authentication required\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Repeated logout rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/logout",
+            "description": "Repeated logout rejected. Expected HTTP 401 / UNAUTHENTICATED. Run in folder order using the cookie jar. No bearer token is used.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"UNAUTHENTICATED\",\"message\":\"Authentication required\"}}));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (401)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/logout",
+                "description": "Repeated logout rejected. Expected HTTP 401 / UNAUTHENTICATED. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"UNAUTHENTICATED\",\n    \"message\": \"Authentication required\"\n  }\n}"
             }
           ]
         },
@@ -387,9 +1220,10 @@
               }
             ],
             "url": "{{baseUrl}}/auth/register",
+            "description": "Register designer. Expected HTTP 201. Run in folder order using the cookie jar. No bearer token is used.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Demo Designer\",\n  \"email\": \"{{designerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"designer\"\n}",
+              "raw": "{\n  \"name\": \"Demo designer\",\n  \"email\": \"{{designerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"designer\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -399,23 +1233,54 @@
           },
           "event": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.environment.set('designerEmail', 'designer-' + Date.now() + '@example.test');"
-                ]
-              }
-            },
-            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status', () => pm.response.to.have.status(201));",
-                  "pm.test('Safe designer user', () => { const u=pm.response.json().data.user; pm.expect(u.role).to.eql('designer'); pm.expect(u).not.to.have.property('passwordHash'); pm.expect(u).not.to.have.property('password'); });"
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Exact safe user structure and identity', () => { const b=pm.response.json(); pm.expect(b).to.have.all.keys('success','data'); pm.expect(b.success).to.eql(true); pm.expect(b.data).to.have.all.keys('user'); const u=b.data.user; pm.expect(u).to.have.all.keys('id','name','email','role','status'); pm.expect(u.id).to.match(/^[a-f0-9]{24}$/); pm.expect(u.name).to.eql('Demo designer'); pm.expect(u.email).to.eql(pm.environment.get('designerEmail')); pm.expect(u.role).to.eql('designer'); pm.expect(u.status).to.eql('active'); pm.variables.set('designerId',u.id); });",
+                  "pm.test('Registration issues no session', () => pm.expect(pm.response.headers.has('Set-Cookie')).to.eql(false));"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (201)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/register",
+                "description": "Register designer. Expected HTTP 201. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Demo designer\",\n  \"email\": \"{{designerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"designer\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"507f1f77bcf86cd799439011\",\n      \"name\": \"Demo designer\",\n      \"email\": \"designer-fictional@example.test\",\n      \"role\": \"designer\",\n      \"status\": \"active\"\n    }\n  }\n}"
             }
           ]
         },
@@ -434,6 +1299,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/login",
+            "description": "Login designer. Expected HTTP 200. Run in folder order using the cookie jar. No bearer token is used.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{designerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
@@ -450,10 +1316,50 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
-                  "pm.test('Safe designer user', () => { const u=pm.response.json().data.user; pm.expect(u.role).to.eql('designer'); pm.expect(u).not.to.have.property('passwordHash'); pm.expect(u).not.to.have.property('password'); });"
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Exact safe user structure and identity', () => { const b=pm.response.json(); pm.expect(b).to.have.all.keys('success','data'); pm.expect(b.success).to.eql(true); pm.expect(b.data).to.have.all.keys('user'); const u=b.data.user; pm.expect(u).to.have.all.keys('id','name','email','role','status'); pm.expect(u.id).to.match(/^[a-f0-9]{24}$/); pm.expect(u.name).to.eql('Demo designer'); pm.expect(u.email).to.eql(pm.environment.get('designerEmail')); pm.expect(u.role).to.eql('designer'); pm.expect(u.status).to.eql('active'); pm.expect(u.id).to.eql(pm.variables.get('designerId')); });",
+                  "pm.test('Session cookie attributes', () => { const h=pm.response.headers.get('Set-Cookie') || ''; pm.expect(/^mygarb_session=[^;]+;/.test(h)).to.eql(true); for (const a of ['HttpOnly','SameSite=Strict','Path=/api']) pm.expect(h.includes(a)).to.eql(true); pm.expect(/;\\s*Domain=/i.test(h)).to.eql(false); });"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (200)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/login",
+                "description": "Login designer. Expected HTTP 200. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{designerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"507f1f77bcf86cd799439011\",\n      \"name\": \"Demo designer\",\n      \"email\": \"designer-fictional@example.test\",\n      \"role\": \"designer\",\n      \"status\": \"active\"\n    }\n  }\n}"
             }
           ]
         },
@@ -462,7 +1368,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/auth/me"
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Current designer. Expected HTTP 200. Run in folder order using the cookie jar. No bearer token is used."
           },
           "event": [
             {
@@ -470,10 +1377,31 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status', () => pm.response.to.have.status(200));",
-                  "pm.test('Safe designer user', () => { const u=pm.response.json().data.user; pm.expect(u.role).to.eql('designer'); pm.expect(u).not.to.have.property('passwordHash'); pm.expect(u).not.to.have.property('password'); });"
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Exact safe user structure and identity', () => { const b=pm.response.json(); pm.expect(b).to.have.all.keys('success','data'); pm.expect(b.success).to.eql(true); pm.expect(b.data).to.have.all.keys('user'); const u=b.data.user; pm.expect(u).to.have.all.keys('id','name','email','role','status'); pm.expect(u.id).to.match(/^[a-f0-9]{24}$/); pm.expect(u.name).to.eql('Demo designer'); pm.expect(u.email).to.eql(pm.environment.get('designerEmail')); pm.expect(u.role).to.eql('designer'); pm.expect(u.status).to.eql('active'); pm.expect(u.id).to.eql(pm.variables.get('designerId')); });"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/auth/me",
+                "description": "Current designer. Expected HTTP 200. Run in folder order using the cookie jar. No bearer token is used."
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"507f1f77bcf86cd799439011\",\n      \"name\": \"Demo designer\",\n      \"email\": \"designer-fictional@example.test\",\n      \"role\": \"designer\",\n      \"status\": \"active\"\n    }\n  }\n}"
             }
           ]
         },
@@ -492,6 +1420,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/logout",
+            "description": "Logout designer. Expected HTTP 200. Run in folder order using the cookie jar. No bearer token is used.",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -508,9 +1437,405 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Expected status', () => pm.response.to.have.status(200));"
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Logout envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":true,\"data\":{\"message\":\"Logged out\"}}));",
+                  "pm.test('Session cookie cleared with matching attributes', () => { const h=pm.response.headers.get('Set-Cookie') || ''; pm.expect(h.startsWith('mygarb_session=;')).to.eql(true); for (const a of ['HttpOnly','SameSite=Strict','Path=/api']) pm.expect(h.includes(a)).to.eql(true); const expiry=/Expires=([^;]+)/i.exec(h); pm.expect(Boolean(expiry) && Date.parse(expiry[1]) < Date.now()).to.eql(true); });"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (200)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/logout",
+                "description": "Logout designer. Expected HTTP 200. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Logged out\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Designer after logout rejected",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Designer after logout rejected. Expected HTTP 401 / UNAUTHENTICATED. Run in folder order using the cookie jar. No bearer token is used."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"UNAUTHENTICATED\",\"message\":\"Authentication required\"}}));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (401)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/auth/me",
+                "description": "Designer after logout rejected. Expected HTTP 401 / UNAUTHENTICATED. Run in folder order using the cookie jar. No bearer token is used."
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"UNAUTHENTICATED\",\n    \"message\": \"Authentication required\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Weak password rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "description": "Weak password rejected. Expected HTTP 400 / INVALID_INPUT. Run in folder order using the cookie jar. No bearer token is used.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"short\",\n  \"role\": \"customer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"INVALID_INPUT\",\"message\":\"Invalid authentication input\"}}));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (400)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/register",
+                "description": "Weak password rejected. Expected HTTP 400 / INVALID_INPUT. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Demo customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"short\",\n  \"role\": \"customer\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_INPUT\",\n    \"message\": \"Invalid authentication input\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Privileged field injection rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "description": "Privileged field injection rejected. Expected HTTP 400 / INVALID_INPUT. Run in folder order using the cookie jar. No bearer token is used.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"customer\",\n  \"status\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"INVALID_INPUT\",\"message\":\"Invalid authentication input\"}}));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (400)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/register",
+                "description": "Privileged field injection rejected. Expected HTTP 400 / INVALID_INPUT. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Demo customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"customer\",\n  \"status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_INPUT\",\n    \"message\": \"Invalid authentication input\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Unknown account rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Unknown account rejected. Expected HTTP 401 / INVALID_CREDENTIALS. Run in folder order using the cookie jar. No bearer token is used.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"absent-{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"INVALID_CREDENTIALS\",\"message\":\"Invalid email or password\"}}));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (401)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/login",
+                "description": "Unknown account rejected. Expected HTTP 401 / INVALID_CREDENTIALS. Run in folder order using the cookie jar. No bearer token is used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"absent-{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_CREDENTIALS\",\n    \"message\": \"Invalid email or password\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Shared authentication rate limit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Shared authentication rate limit. Expected HTTP 429 / AUTH_RATE_LIMITED. Eleventh login/register attempt on a fresh server. Run last; the default ten-attempt budget is intentionally exhausted.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "pm.test('HTTP 429', () => pm.response.to.have.status(429));",
+                  "pm.test('Exact safe error envelope', () => pm.expect(pm.response.json()).to.eql({\"success\":false,\"error\":{\"code\":\"AUTH_RATE_LIMITED\",\"message\":\"Too many authentication attempts\"}}));",
+                  "pm.test('Retry-After is positive', () => pm.expect(Number(pm.response.headers.get('Retry-After'))).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Safe fictional example (429)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "url": "{{baseUrl}}/auth/login",
+                "description": "Shared authentication rate limit. Expected HTTP 429 / AUTH_RATE_LIMITED. Eleventh login/register attempt on a fresh server. Run last; the default ten-attempt budget is intentionally exhausted.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"AUTH_RATE_LIMITED\",\n    \"message\": \"Too many authentication attempts\"\n  }\n}"
             }
           ]
         }
