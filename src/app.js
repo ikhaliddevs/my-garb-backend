@@ -8,6 +8,7 @@ const { healthRoutes } = require('./routes/health');
 const { notFound, errorHandler } = require('./middleware/errors');
 const cookieParser = require('cookie-parser');
 const { authRoutes } = require('./routes/auth');
+const { profileRoutes } = require('./routes/profile');
 
 function createApp({ config, database, logger = console, rateLimitMax = 100, authRateLimitMax = 10 }) {
   const app = express();
@@ -19,7 +20,7 @@ function createApp({ config, database, logger = console, rateLimitMax = 100, aut
     next();
   });
   app.use(cors({ origin: (origin, callback) => callback(null, Boolean(origin && config.origins.includes(origin))), credentials: true,
-    allowedHeaders: ['Content-Type', 'X-MYGARB-Request'], methods: ['GET', 'POST', 'OPTIONS'] }));
+    allowedHeaders: ['Content-Type', 'X-MYGARB-Request'], methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'] }));
   app.use('/api', (req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
   app.use('/api', rateLimit({
     windowMs: 60 * 1000, limit: rateLimitMax, standardHeaders: 'draft-8', legacyHeaders: false,
@@ -30,6 +31,7 @@ function createApp({ config, database, logger = console, rateLimitMax = 100, aut
   app.use(express.json({ limit: '16kb' }));
   app.use(cookieParser());
   app.use('/api/auth', authRoutes({ config, database, authRateLimitMax }));
+  app.use('/api', profileRoutes({ config, database }));
   app.use('/api/health', healthRoutes(database));
   app.get('/api/docs.json', (req, res) => res.json(specification));
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(specification));

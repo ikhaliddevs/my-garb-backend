@@ -1,0 +1,37 @@
+# M3 test report
+
+Date: 31 October 2026, Africa/Lagos. Status: implementation and local integration verification passed; remote delivery/CI verification pending. Manual GUI review remains pending.
+
+## Local verification
+
+Environment: Windows, Node v26.3.1, npm 11.16.0, MongoDB Community 8.3.4; Intel Core i7-8565U, 8 logical CPUs, 16 GiB RAM. Integration tests target only guarded local `mygarb_phasonable_test`, with run-owned fixtures and cleanup. No development accounts or database reset/drop operations are used.
+
+| Check | Actual result |
+| --- | --- |
+| Original-directory clean install | Two attempts failed with Windows EPERM unlinking bcrypt's loaded native module, including outside sandbox. The user chose to keep the running API and use an isolated verification copy. No process was stopped. Missing dependency files from the interrupted install were restored from the clean copy without overwriting existing files; all existing files matched. |
+| Authorized isolated clean install | PASS: `npm.cmd ci --prefix .tmp/m3-verification --fetch-retries=0 --fetch-timeout=15000`; 327 packages, 49s, unchanged package/lockfile. No `.env` copied. Existing deprecation/install-script warnings retained. |
+| Isolated `npm.cmd run lint` | PASS. An initial control-character-regex lint failure was corrected before final verification. |
+| Isolated `npm.cmd test` with real MongoDB | PASS: 42 tests total, 41 passed, 0 failed, 1 existing Windows POSIX signal skip; 76.896s. Includes nine M3 tests and all M1/M2 regressions. Cleanup asserts zero remaining run-owned users/sessions. |
+| M1/M2 Newman regression | PASS: 29 requests, 94 assertions, zero failures. |
+| M3 Newman | PASS: 22 requests, 51 assertions, zero failures. Initial collection script scope errors were corrected; the initial run's zero assertions was not accepted as a pass. Final combined `npm.cmd run test:postman` passed both collections: **51 requests, 145 assertions**, zero request/assertion/runner failures. Each collection cleaned its two run-owned users; zero sessions remained. |
+| Production audit | PASS: exit 0, zero findings. |
+| Full audit | Exit 1: 23 findings (11 high, 12 moderate, zero critical); unresolved development-tool findings, not an audit-clean result. |
+| Git whitespace check | Passed; final diff review before commit. |
+
+New integration coverage includes customer/designer/admin access, anonymous access, owner isolation and mass-assignment rejection, current account status/role, CSRF/CORS methods and JSON policy, schema bounds, safe image URL handling, portfolio ownership and atomic cap under concurrent additions, discovery eligibility/search/filters/empty pages/privacy, customer measurement privacy/replacement, reconnect and actual API restart persistence. Performance test creates 50 run-owned eligible designers, warms the query and records ten requests with a one-second-per-request acceptance bound.
+
+Final warmed discovery timings (milliseconds): **14, 19, 20, 16, 29, 17, 11, 12, 13, 12**. Each response contained 50 eligible fixtures. This is local acceptance evidence, not a production load benchmark. Both actual API process restart checks and database reconnection checks passed. The Windows-only skipped signal test remains enabled on Ubuntu CI.
+
+## Remote verification and publication
+
+Branch: `feature/milestone-03-profiles-discovery-measurements`. No M3 commit/push or CI result at report preparation. No PR created; user explicitly deferred it and required existing PRs unchanged. Original M2 PR #2 was verified merged. PR #3's merge was then fetched at `97f1d922b5032e9edd8c3c4664c706679297811a`; M3 was fast-forwarded to that updated develop commit, preserving all edits. Earlier GitHub DNS failures recovered. Push CI is enabled for the M3 branch. Previous M2 CI success is not M3 verification; final publication SHA and exact-head CI must be checked after pushing.
+
+## Manual status
+
+M2 manual testing is mostly complete per the user. Customer/designer identity assertions still need alignment with custom local test accounts and rerunning: PENDING. Rate-limit test: PASSED per user report. Latest designer login: HTTP 429 while the limit remained active; successful login/identity check: PENDING. No personal details are copied into these reports. M3 manual GUI verification is pending and distinct from automated tests.
+
+## Dependency and operational limits
+
+No dependency versions or lockfile changed in M3. Current audit reports **23 affected package entries: 11 high, 12 moderate, zero critical; production-only zero**. The increase from M2's 18 is five moderate entries in the ESLint tree: `minimatch`, `@eslint/config-array`, `eslint`, `@eslint-community/eslint-utils`, and `@eslint/js`. The root advisory is [minimatch globparts amplification denial of service](https://github.com/advisories/GHSA-g3hv-75wg-m249), affecting versions below 11.0.1 according to the npm audit response. Parent entries are propagated findings, not five independent exploits. The remaining Newman-tree findings are described in [M2 dependency audit](M2-dependency-audit.md).
+
+The audit service proposes breaking downgrades (ESLint 4.0.0, @eslint/js 9.39.5, Newman 4.6.1), not a validated drop-in remediation. No force fix, downgrade or override was added. These findings remain unresolved development-tool risks; passing functional checks does not waive them or establish an audit-clean repository. The trusted repository collections/configuration and isolated fictional fixtures remain the supported test scope. Production audit is zero; API import inspection excludes Newman/ESLint/Postman Runtime/Handlebars. Preserve the MongoDB 8 / Ubuntu 22.04 CI compatibility fix and review the runner before retirement. Clean-install verification used the user-authorized isolated copy so the existing API could remain running.

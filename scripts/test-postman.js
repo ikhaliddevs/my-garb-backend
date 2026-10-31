@@ -3,9 +3,9 @@ const { once } = require('node:events');
 const newman = require('newman');
 const { createApp } = require('../src/app');
 const { createDatabase } = require('../src/config/database');
-const collection = require('../docs/postman/MYGARB_Backend.postman_collection.json');
 
-async function main() {
+async function main({ m3 = false } = {}) {
+  const collection = m3 ? require('../docs/postman/MYGARB_M3.postman_collection.json') : require('../docs/postman/MYGARB_Backend.postman_collection.json');
   const uri = process.env.TEST_MONGODB_URI || 'mongodb://127.0.0.1:27017/mygarb_phasonable_test';
   if (!/^mongodb:\/\/(?:127\.0\.0\.1|localhost):\d+\/mygarb_phasonable_test$/.test(uri)) throw new Error('Unsafe test database');
   const database = createDatabase();
@@ -20,8 +20,8 @@ async function main() {
     await once(server, 'listening');
     const baseUrl = `http://127.0.0.1:${server.address().port}/api`;
     const spec = await fetch(`${baseUrl}/docs.json`).then(response => response.json());
-    if (spec.info.title !== 'MY GARB PHASONABLE Backend' || spec.info.version !== '0.2.0' || !spec.paths['/api/auth/login']) throw new Error('Unexpected API contract');
-    console.info('Verified local MY GARB API 0.2.0; isolated test database and fresh in-memory Newman cookie jar.');
+    if (spec.info.title !== 'MY GARB PHASONABLE Backend' || spec.info.version !== '0.3.0' || !spec.paths['/api/measurements']) throw new Error('Unexpected API contract');
+    console.info(`Verified local MY GARB API 0.3.0; ${m3 ? 'M3' : 'M1/M2'} collection; isolated test database and fresh in-memory Newman cookie jar.`);
     const values = { baseUrl, customerEmail: emails[0], designerEmail: emails[1], authPassword: randomBytes(24).toString('hex'), fixtureMode: 'runner' };
     const summary = await new Promise((resolve, reject) => {
       newman.run({ collection, environment: { values: Object.entries(values).map(([key, value]) => ({ key, value, enabled: true })) },
@@ -53,7 +53,7 @@ async function main() {
   }
 }
 
-if (require.main === module) main().catch(() => {
+if (require.main === module) main().then(() => main({ m3: true })).catch(() => {
   console.error('Postman runner failed; check local test MongoDB, dependencies, and collection assertions. Sensitive details suppressed.');
   process.exitCode = 1;
 });
