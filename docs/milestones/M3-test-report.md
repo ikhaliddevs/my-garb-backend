@@ -1,6 +1,6 @@
 # M3 test report
 
-Date: 31 October 2026, Africa/Lagos. Status: implementation and local integration verification passed; remote delivery/CI verification pending. Manual GUI review remains pending.
+Date: 31 October 2026, Africa/Lagos. Status: implementation, local automated verification and implementation-commit push CI passed. Manual GUI review remains pending. The documentation follow-up's own latest pushed SHA must also pass CI before final handoff.
 
 ## Local verification
 
@@ -17,6 +17,8 @@ Environment: Windows, Node v26.3.1, npm 11.16.0, MongoDB Community 8.3.4; Intel 
 | Production audit | PASS: exit 0, zero findings. |
 | Full audit | Exit 1: 23 findings (11 high, 12 moderate, zero critical); unresolved development-tool findings, not an audit-clean result. |
 | Git whitespace check | Passed; final diff review before commit. |
+| Verification-copy equivalence / OpenAPI references | PASS: 29 implementation/test/configuration/collection files matched the verified copy byte-for-byte; all 110 OpenAPI references resolved. |
+| Unsafe test URI checks | PASS: M3 test module and Newman runner rejected a non-test database URI with exit 1 before connecting. |
 
 New integration coverage includes customer/designer/admin access, anonymous access, owner isolation and mass-assignment rejection, current account status/role, CSRF/CORS methods and JSON policy, schema bounds, safe image URL handling, portfolio ownership and atomic cap under concurrent additions, discovery eligibility/search/filters/empty pages/privacy, customer measurement privacy/replacement, reconnect and actual API restart persistence. Performance test creates 50 run-owned eligible designers, warms the query and records ten requests with a one-second-per-request acceptance bound.
 
@@ -24,7 +26,9 @@ Final warmed discovery timings (milliseconds): **14, 19, 20, 16, 29, 17, 11, 12,
 
 ## Remote verification and publication
 
-Branch: `feature/milestone-03-profiles-discovery-measurements`. No M3 commit/push or CI result at report preparation. No PR created; user explicitly deferred it and required existing PRs unchanged. Original M2 PR #2 was verified merged. PR #3's merge was then fetched at `97f1d922b5032e9edd8c3c4664c706679297811a`; M3 was fast-forwarded to that updated develop commit, preserving all edits. Earlier GitHub DNS failures recovered. Push CI is enabled for the M3 branch. Previous M2 CI success is not M3 verification; final publication SHA and exact-head CI must be checked after pushing.
+Branch: `feature/milestone-03-profiles-discovery-measurements`. Implementation committed and pushed at **`ca678180da701a76343a410dd4940d927f69f468`**. [Push CI 41234398413](https://github.com/ikhaliddevs/my-garb-backend/actions/runs/41234398413) succeeded for that exact SHA. GitHub job 124635027006 confirms MongoDB initialization, checkout, Node 24 setup, clean install, lint, integration tests and both Postman collections all executed successfully. Downloaded logs confirm **42 tests passed, 0 failed, 0 skipped** (19.105s); M1/M2 **29 requests / 94 assertions**, M3 **22 requests / 51 assertions**, all with zero failures. CI's ten warmed discovery requests were 4ms then nine at 3ms. Raw logs stay ignored locally.
+
+No M3 PR exists: creation was explicitly deferred, and existing PRs were not changed. GitHub confirms PR #3 merged at `2026-10-31T18:51:50Z`; its merge was fetched at `97f1d922b5032e9edd8c3c4664c706679297811a`, and M3 was safely fast-forwarded to that updated develop commit. Earlier GitHub DNS failures recovered. This report is a documentation follow-up to the verified implementation; the final delivery SHA and its own push-CI result are recorded in the final handoff and local progress notes after publication. No PR merge or M4 implementation was performed.
 
 ## Manual status
 

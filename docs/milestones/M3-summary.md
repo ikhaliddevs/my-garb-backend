@@ -1,6 +1,6 @@
 # M3 profiles, portfolios, discovery and private measurements
 
-Implemented and locally verified, 31 October 2026 (Africa/Lagos). Remote verification and delivery status: [M3 test report](M3-test-report.md). Manual GUI review remains pending.
+Implemented and automatically verified locally and in CI, 31 October 2026 (Africa/Lagos). Implementation commit: `ca678180da701a76343a410dd4940d927f69f468`; [push CI](https://github.com/ikhaliddevs/my-garb-backend/actions/runs/41234398413) passed. Full evidence and final-documentation verification policy: [M3 test report](M3-test-report.md). Manual GUI review remains pending; M3 PR creation is deferred.
 
 Approved scope: PRD FR02, FR03 and private profile storage from FR05. Added owner-only customer name/private phone and designer business profile; designer portfolio creation/deletion; eligible active public designer discovery with search, filters and bounded pagination; private customer-only measurements with explicit units. Unknown fields and owner selectors are rejected. Existing authentication, active-account checks, CSRF, CORS, response envelopes, body limits and safe logging remain.
 
