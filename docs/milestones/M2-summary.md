@@ -6,6 +6,8 @@ Local follow-up, 30 October 2026: added `npm run test:postman` and expanded coll
 
 ## Scope delivered
 
+CI recovery, verified 31 October: MongoDB's kernel guard caused the previous initialization failures. Pinning the CI runner to Ubuntu 22.04 resolved them; fix commit `f203187dce036f6f9b69d2336d40729dd173e22c` passed both push and PR checks, including install, lint, 33 integration tests (no skips) and 94 Postman assertions. See [CI repair report](M2-ci-repair.md). PR #3 remains open for review; no merge or M3 work is included.
+
 GitHub status verified 30 October: PR #2 was already merged on 27 October 2026, merge commit `e35459d82dcb6539fcfe1c1c3c0b68f9bfef2d3a`. Earlier open/unmerged references are historical. This Postman delivery continues on the existing M2 branch and performs no merge. Remaining development findings are non-blocking for trusted functional scope subject to reviewer acceptance, not an audit-clean certification; latest delivery/CI evidence is recorded on GitHub.
 
 Dependency follow-up: the scoped Handlebars 4.7.10 override fixes the Newman tree's critical finding. Remaining audit: 18 development findings (11 high, 7 moderate); production audit zero. Install/lint, integration and Postman checks passed again. See [audit investigation](M2-dependency-audit.md); the tooling is not claimed audit-clean.
