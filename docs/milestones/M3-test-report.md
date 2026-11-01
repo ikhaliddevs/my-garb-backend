@@ -1,6 +1,6 @@
 # M3 test report
 
-Date: 31 October 2026, Africa/Lagos. Status: implementation, local automated verification and implementation-commit push CI passed. Manual GUI review remains pending. The documentation follow-up's own latest pushed SHA must also pass CI before final handoff.
+Updated: 1 November 2026, Africa/Lagos. Implementation and previously recorded automated verification passed. M3 manual Postman execution is now completed per the user, including the re-authentication retry described below. Human review and PR creation remain separate, unapproved steps. This documentation follow-up's latest pushed SHA must also pass CI before final handoff.
 
 ## Local verification
 
@@ -32,7 +32,21 @@ No M3 PR exists: creation was explicitly deferred, and existing PRs were not cha
 
 ## Manual status
 
-M2 manual testing is mostly complete per the user. Customer/designer identity assertions still need alignment with custom local test accounts and rerunning: PENDING. Rate-limit test: PASSED per user report. Latest designer login: HTTP 429 while the limit remained active; successful login/identity check: PENDING. No personal details are copied into these reports. M3 manual GUI verification is pending and distinct from automated tests.
+**M3 Postman manual results — user-confirmed, 1 November 2026:** all **22 M3 requests completed**, with **51 assertions passing across their successful results**. This is not a claim that every initial attempt passed or that one uninterrupted runner execution had zero failures.
+
+| Manual check | User-reported result |
+| --- | --- |
+| Update private customer profile, initial attempt | HTTP **401** after a long pause. Retained as an unsuccessful initial attempt; the cause was not independently diagnosed. |
+| Update private customer profile, retry | Logged in again, retried, and received HTTP **200** with **3/3 tests passing**. |
+| Overall M3 requests | All 22 completed successfully after the retry; 51 passing assertions across the successful results. |
+| Postman organization | Requests moved into an **M3 folder inside the user's existing collection**, preserving the M3 scripts and existing Postman edits. No exported copy of the user's edited collection was required or committed. |
+| Manual setup | **MY GARB M3 Manual (isolated)**; API `http://127.0.0.2:5001/api`; separate local `mygarb_phasonable_test` database. Existing accounts and APIs preserved. |
+
+The [manual setup guide](../postman/M3-guide.md), blank [environment template](../postman/M3-manual.postman_environment.json), and README setup link are included in this follow-up. The committed environment contains only the loopback base URL and empty fixture variables, with no generated credentials, account IDs, cookies or personal details. These GUI results are user-reported evidence, distinct from the independently executed automated checks above. This documentation update does not rerun the user's requests or modify their Postman collection, running APIs or accounts.
+
+Documentation follow-up verification: local `npm.cmd run lint`, environment JSON/blank-value assertions, PowerShell startup-snippet parsing without execution, and `git diff --check` passed. Application code, dependencies and lockfile are unchanged. No new local clean install or integration run was performed for these documentation-only changes; the automated local results above remain historical. The latest pushed commit's CI must run clean install, lint, integration tests and both Postman collections, with the actual result recorded in the final handoff and ignored local progress notes.
+
+M2 manual testing remains as last reported: customer/designer identity assertions need alignment with custom test accounts and rerunning (**PENDING**); rate-limit test **PASSED** per the user; the last reported designer-login attempt returned HTTP **429** while the limit was active, so that M2 login/identity check remains **PENDING**. The completed M3 checks do not silently close these separate M2 items. No personal details are copied into the reports.
 
 ## Dependency and operational limits
 
