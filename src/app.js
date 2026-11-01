@@ -9,6 +9,7 @@ const { notFound, errorHandler } = require('./middleware/errors');
 const cookieParser = require('cookie-parser');
 const { authRoutes } = require('./routes/auth');
 const { profileRoutes } = require('./routes/profile');
+const { orderRoutes } = require('./routes/orders');
 
 function createApp({ config, database, logger = console, rateLimitMax = 100, authRateLimitMax = 10 }) {
   const app = express();
@@ -32,6 +33,7 @@ function createApp({ config, database, logger = console, rateLimitMax = 100, aut
   app.use(cookieParser());
   app.use('/api/auth', authRoutes({ config, database, authRateLimitMax }));
   app.use('/api', profileRoutes({ config, database }));
+  app.use('/api', orderRoutes({ config, database }));
   app.use('/api/health', healthRoutes(database));
   app.get('/api/docs.json', (req, res) => res.json(specification));
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(specification));

@@ -1,14 +1,17 @@
 const mongoose = require('mongoose');
 const { createAuthModels } = require('../models/auth');
+const { createOrderModels } = require('../models/orders');
 
 function createDatabase() {
   const client = new mongoose.Mongoose();
-  const models = createAuthModels(client);
+  const models = { ...createAuthModels(client), ...createOrderModels(client) };
   return {
     models,
     prepareAuth: async () => {
       await models.User.createIndexes();
       await models.Session.createIndexes();
+      await models.Request.createIndexes();
+      await models.Order.createIndexes();
     },
     isReady: () => client.connection.readyState === 1,
     async connect(uri) {

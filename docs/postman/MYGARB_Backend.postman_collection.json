@@ -1840,6 +1840,3558 @@
           ]
         }
       ]
+    },
+    {
+      "name": "M4 Requests and Orders",
+      "description": "Run this folder alone with a fresh isolated M4 environment and cookie hostname. Preserve all folder scripts when copying it into an edited GUI collection. M2 final rate-limit tests must use a separate API instance/window before M4.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.environment.get('m4Initialized')) {",
+              "  if (pm.environment.get('fixtureMode') !== 'runner') {",
+              "    const suffix = pm.variables.replaceIn('{{$guid}}');",
+              "    pm.environment.set('m4CustomerEmail', 'customer-' + suffix + '@example.test');",
+              "    pm.environment.set('m4DesignerEmail', 'designer-' + suffix + '@example.test');",
+              "    pm.environment.set('m4OtherEmail', 'other-' + suffix + '@example.test');",
+              "    pm.environment.set('m4AuthPassword', pm.variables.replaceIn('{{$guid}}') + 'Aa1!');",
+              "  }",
+              "  pm.environment.set('m4DesiredDate', new Date(Date.now()+30*86400000).toISOString().slice(0,10));",
+              "  pm.environment.set('m4ProposedDate', new Date(Date.now()+40*86400000).toISOString().slice(0,10));",
+              "  pm.environment.set('m4Initialized', 'true');",
+              "}"
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "Unauthenticated request list",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/requests",
+            "header": [],
+            "description": "Unauthenticated request list. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{baseUrl}}/requests",
+                "header": [],
+                "description": "Unauthenticated request list. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks."
+              },
+              "code": 401,
+              "status": "Rejected",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"UNAUTHENTICATED\",\n    \"message\": \"Request rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register M4 customer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/register",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Register M4 customer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sample M4 customer\",\n  \"email\": \"{{m4CustomerEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\",\n  \"role\": \"customer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/register",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Register M4 customer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Sample M4 customer\",\n  \"email\": \"{{m4CustomerEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\",\n  \"role\": \"customer\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 201,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000002\",\n      \"name\": \"Sample M4 User\",\n      \"email\": \"sample@example.test\",\n      \"role\": \"customer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register M4 designer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/register",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Register M4 designer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sample M4 designer\",\n  \"email\": \"{{m4DesignerEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\",\n  \"role\": \"designer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.environment.set('m4DesignerId', body.data.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/register",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Register M4 designer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Sample M4 designer\",\n  \"email\": \"{{m4DesignerEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\",\n  \"role\": \"designer\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 201,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000002\",\n      \"name\": \"Sample M4 User\",\n      \"email\": \"sample@example.test\",\n      \"role\": \"designer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register M4 other",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/register",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Register M4 other. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sample M4 other\",\n  \"email\": \"{{m4OtherEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\",\n  \"role\": \"customer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/register",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Register M4 other. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Sample M4 other\",\n  \"email\": \"{{m4OtherEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\",\n  \"role\": \"customer\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 201,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000002\",\n      \"name\": \"Sample M4 User\",\n      \"email\": \"sample@example.test\",\n      \"role\": \"customer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login M4 designer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Login M4 designer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{m4DesignerEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/login",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Login M4 designer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{m4DesignerEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000002\",\n      \"name\": \"Sample M4 User\",\n      \"email\": \"sample@example.test\",\n      \"role\": \"designer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Prepare M4 designer profile",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/profile",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Prepare M4 designer profile. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessName\": \"M4 Sample Studio\",\n  \"biography\": \"Fictional studio\",\n  \"location\": \"Sample City\",\n  \"specialties\": [\n    \"Formal\"\n  ],\n  \"available\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/profile",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Prepare M4 designer profile. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"businessName\": \"M4 Sample Studio\",\n  \"biography\": \"Fictional studio\",\n  \"location\": \"Sample City\",\n  \"specialties\": [\n    \"Formal\"\n  ],\n  \"available\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"profile\": {\n      \"id\": \"000000000000000000000003\",\n      \"name\": \"Sample M4 designer\",\n      \"businessName\": \"M4 Sample Studio\",\n      \"biography\": \"Fictional studio\",\n      \"location\": \"Sample City\",\n      \"specialties\": [\n        \"Formal\"\n      ],\n      \"available\": true,\n      \"portfolio\": []\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Prepare M4 portfolio",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/portfolio",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Prepare M4 portfolio. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Sample\",\n  \"category\": \"Formal\",\n  \"imageUrl\": \"https://example.com/sample.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/portfolio",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Prepare M4 portfolio. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Sample\",\n  \"category\": \"Formal\",\n  \"imageUrl\": \"https://example.com/sample.jpg\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 201,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"entry\": {\n      \"id\": \"000000000000000000000004\",\n      \"title\": \"Sample\",\n      \"category\": \"Formal\",\n      \"imageUrl\": \"https://example.com/sample.jpg\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout M4 designer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Logout M4 designer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/logout",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Logout M4 designer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Logged out\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login M4 customer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Login M4 customer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{m4CustomerEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/login",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Login M4 customer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{m4CustomerEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000002\",\n      \"name\": \"Sample M4 User\",\n      \"email\": \"sample@example.test\",\n      \"role\": \"customer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Save M4 source measurements",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/measurements",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Save M4 source measurements. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unit\": \"cm\",\n  \"values\": [\n    {\n      \"label\": \"Chest\",\n      \"value\": 90\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PUT",
+                "url": "{{baseUrl}}/measurements",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Save M4 source measurements. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"unit\": \"cm\",\n  \"values\": [\n    {\n      \"label\": \"Chest\",\n      \"value\": 90\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"measurements\": {\n      \"unit\": \"cm\",\n      \"values\": [\n        {\n          \"label\": \"Chest\",\n          \"value\": 90\n        }\n      ],\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject sharing without consent",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/requests",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject sharing without consent. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designerId\": \"{{m4DesignerId}}\",\n  \"outfitType\": \"Sample outfit\",\n  \"description\": \"Fictional sample\",\n  \"quantity\": 1,\n  \"desiredCompletionDate\": \"{{m4DesiredDate}}\",\n  \"budgetAmount\": \"25000.00\",\n  \"referenceImageUrls\": [],\n  \"shareMeasurements\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/requests",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Reject sharing without consent. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"designerId\": \"{{m4DesignerId}}\",\n  \"outfitType\": \"Sample outfit\",\n  \"description\": \"Fictional sample\",\n  \"quantity\": 1,\n  \"desiredCompletionDate\": \"{{m4DesiredDate}}\",\n  \"budgetAmount\": \"25000.00\",\n  \"referenceImageUrls\": [],\n  \"shareMeasurements\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 400,
+              "status": "Rejected",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_INPUT\",\n    \"message\": \"Request rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject numeric money",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/requests",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject numeric money. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designerId\": \"{{m4DesignerId}}\",\n  \"outfitType\": \"Sample outfit\",\n  \"description\": \"Fictional sample\",\n  \"quantity\": 1,\n  \"desiredCompletionDate\": \"{{m4DesiredDate}}\",\n  \"budgetAmount\": 25000,\n  \"referenceImageUrls\": [],\n  \"shareMeasurements\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/requests",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Reject numeric money. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"designerId\": \"{{m4DesignerId}}\",\n  \"outfitType\": \"Sample outfit\",\n  \"description\": \"Fictional sample\",\n  \"quantity\": 1,\n  \"desiredCompletionDate\": \"{{m4DesiredDate}}\",\n  \"budgetAmount\": 25000,\n  \"referenceImageUrls\": [],\n  \"shareMeasurements\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 400,
+              "status": "Rejected",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_INPUT\",\n    \"message\": \"Request rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Submit M4 request",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/requests",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Submit M4 request. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designerId\": \"{{m4DesignerId}}\",\n  \"outfitType\": \"Sample outfit\",\n  \"description\": \"Fictional sample\",\n  \"quantity\": 1,\n  \"desiredCompletionDate\": \"{{m4DesiredDate}}\",\n  \"budgetAmount\": \"25000.00\",\n  \"referenceImageUrls\": [],\n  \"shareMeasurements\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.environment.set('m4RequestId', body.data.request.id);",
+                  "pm.test('Shared saved snapshot', () => pm.expect(body.data.request.measurementSnapshot.values).to.eql([{label:'Chest',value:90}]));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/requests",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Submit M4 request. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"designerId\": \"{{m4DesignerId}}\",\n  \"outfitType\": \"Sample outfit\",\n  \"description\": \"Fictional sample\",\n  \"quantity\": 1,\n  \"desiredCompletionDate\": \"{{m4DesiredDate}}\",\n  \"budgetAmount\": \"25000.00\",\n  \"referenceImageUrls\": [],\n  \"shareMeasurements\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 201,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"request\": {\n      \"id\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"submitted\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"desiredCompletionDate\": \"2027-01-01\",\n      \"budgetAmount\": \"25000.00\",\n      \"currency\": \"NGN\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"responseText\": null,\n      \"decidedAt\": null,\n      \"cancelledAt\": null,\n      \"confirmedAt\": null\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Edit private measurements after submission",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/measurements",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Edit private measurements after submission. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unit\": \"in\",\n  \"values\": [\n    {\n      \"label\": \"Waist\",\n      \"value\": 30\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PUT",
+                "url": "{{baseUrl}}/measurements",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Edit private measurements after submission. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"unit\": \"in\",\n  \"values\": [\n    {\n      \"label\": \"Waist\",\n      \"value\": 30\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"measurements\": {\n      \"unit\": \"in\",\n      \"values\": [\n        {\n          \"label\": \"Waist\",\n          \"value\": 30\n        }\n      ],\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Read immutable request snapshot",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/requests/{{m4RequestId}}",
+            "header": [],
+            "description": "Read immutable request snapshot. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Original snapshot retained', () => pm.expect(body.data.request.measurementSnapshot.unit).to.eql('cm'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{baseUrl}}/requests/{{m4RequestId}}",
+                "header": [],
+                "description": "Read immutable request snapshot. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks."
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"request\": {\n      \"id\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"submitted\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"desiredCompletionDate\": \"2027-01-01\",\n      \"budgetAmount\": \"25000.00\",\n      \"currency\": \"NGN\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"responseText\": null,\n      \"decidedAt\": null,\n      \"cancelledAt\": null,\n      \"confirmedAt\": null\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject premature confirmation",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/requests/{{m4RequestId}}/confirm",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject premature confirmation. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/requests/{{m4RequestId}}/confirm",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Reject premature confirmation. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 409,
+              "status": "Rejected",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_TRANSITION\",\n    \"message\": \"Request rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Submit request for cancellation",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/requests",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Submit request for cancellation. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designerId\": \"{{m4DesignerId}}\",\n  \"outfitType\": \"Sample outfit\",\n  \"description\": \"Fictional sample\",\n  \"quantity\": 1,\n  \"desiredCompletionDate\": \"{{m4DesiredDate}}\",\n  \"budgetAmount\": \"25000.00\",\n  \"referenceImageUrls\": [],\n  \"shareMeasurements\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.environment.set('m4CancelledId', body.data.request.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/requests",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Submit request for cancellation. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"designerId\": \"{{m4DesignerId}}\",\n  \"outfitType\": \"Sample outfit\",\n  \"description\": \"Fictional sample\",\n  \"quantity\": 1,\n  \"desiredCompletionDate\": \"{{m4DesiredDate}}\",\n  \"budgetAmount\": \"25000.00\",\n  \"referenceImageUrls\": [],\n  \"shareMeasurements\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 201,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"request\": {\n      \"id\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"submitted\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"desiredCompletionDate\": \"2027-01-01\",\n      \"budgetAmount\": \"25000.00\",\n      \"currency\": \"NGN\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"responseText\": null,\n      \"decidedAt\": null,\n      \"cancelledAt\": null,\n      \"confirmedAt\": null\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Cancel submitted request",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/requests/{{m4CancelledId}}/cancel",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Cancel submitted request. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Cancelled', () => pm.expect(body.data.request.status).to.eql('cancelled'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/requests/{{m4CancelledId}}/cancel",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Cancel submitted request. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"request\": {\n      \"id\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"cancelled\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"desiredCompletionDate\": \"2027-01-01\",\n      \"budgetAmount\": \"25000.00\",\n      \"currency\": \"NGN\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"responseText\": null,\n      \"decidedAt\": null,\n      \"cancelledAt\": \"2026-11-01T00:00:00.000Z\",\n      \"confirmedAt\": null\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject cancelled confirmation",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/requests/{{m4CancelledId}}/confirm",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject cancelled confirmation. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/requests/{{m4CancelledId}}/confirm",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Reject cancelled confirmation. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 409,
+              "status": "Rejected",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_TRANSITION\",\n    \"message\": \"Request rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout M4 customer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Logout M4 customer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/logout",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Logout M4 customer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Logged out\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login M4 designer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Login M4 designer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{m4DesignerEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/login",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Login M4 designer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{m4DesignerEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000002\",\n      \"name\": \"Sample M4 User\",\n      \"email\": \"sample@example.test\",\n      \"role\": \"designer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject missing designer response",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/requests/{{m4RequestId}}/decision",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject missing designer response. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"accepted\",\n  \"priceAmount\": \"27500.00\",\n  \"completionDate\": \"{{m4ProposedDate}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/requests/{{m4RequestId}}/decision",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Reject missing designer response. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"decision\": \"accepted\",\n  \"priceAmount\": \"27500.00\",\n  \"completionDate\": \"{{m4ProposedDate}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 400,
+              "status": "Rejected",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_INPUT\",\n    \"message\": \"Request rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Accept with explicit proposal response",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/requests/{{m4RequestId}}/decision",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Accept with explicit proposal response. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"accepted\",\n  \"responseText\": \"I can make this sample outfit.\",\n  \"priceAmount\": \"27500.00\",\n  \"completionDate\": \"{{m4ProposedDate}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Proposal price', () => pm.expect(body.data.request.proposal.priceAmount).to.eql('27500.00'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/requests/{{m4RequestId}}/decision",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Accept with explicit proposal response. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"decision\": \"accepted\",\n  \"responseText\": \"I can make this sample outfit.\",\n  \"priceAmount\": \"27500.00\",\n  \"completionDate\": \"{{m4ProposedDate}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"request\": {\n      \"id\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"accepted\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"desiredCompletionDate\": \"2027-01-01\",\n      \"budgetAmount\": \"25000.00\",\n      \"currency\": \"NGN\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"responseText\": \"I can make this sample outfit.\",\n      \"decidedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"cancelledAt\": null,\n      \"confirmedAt\": null,\n      \"proposal\": {\n        \"priceAmount\": \"27500.00\",\n        \"completionDate\": \"2027-01-10\"\n      }\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout M4 designer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Logout M4 designer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/logout",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Logout M4 designer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Logged out\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login M4 customer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Login M4 customer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{m4CustomerEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/login",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Login M4 customer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{m4CustomerEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000002\",\n      \"name\": \"Sample M4 User\",\n      \"email\": \"sample@example.test\",\n      \"role\": \"customer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Confirm and create one order",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/requests/{{m4RequestId}}/confirm",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Confirm and create one order. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.environment.set('m4OrderId', body.data.order.id);",
+                  "pm.test('One initial event', () => pm.expect(body.data.order.history).to.have.lengthOf(1));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/requests/{{m4RequestId}}/confirm",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Confirm and create one order. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"order\": {\n      \"id\": \"000000000000000000000001\",\n      \"requestId\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"confirmed\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"priceAmount\": \"27500.00\",\n      \"currency\": \"NGN\",\n      \"completionDate\": \"2027-01-10\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"history\": [\n        {\n          \"status\": \"confirmed\",\n          \"actorId\": \"000000000000000000000002\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        }\n      ]\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Retry confirmation safely",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/requests/{{m4RequestId}}/confirm",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Retry confirmation safely. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Same order', () => pm.expect(body.data.order.id).to.eql(pm.environment.get('m4OrderId')));",
+                  "pm.test('No duplicate event', () => pm.expect(body.data.order.history).to.have.lengthOf(1));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/requests/{{m4RequestId}}/confirm",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Retry confirmation safely. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"order\": {\n      \"id\": \"000000000000000000000001\",\n      \"requestId\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"confirmed\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"priceAmount\": \"27500.00\",\n      \"currency\": \"NGN\",\n      \"completionDate\": \"2027-01-10\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"history\": [\n        {\n          \"status\": \"confirmed\",\n          \"actorId\": \"000000000000000000000002\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        }\n      ]\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject cancellation after confirmation",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/requests/{{m4RequestId}}/cancel",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject cancellation after confirmation. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/requests/{{m4RequestId}}/cancel",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Reject cancellation after confirmation. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 409,
+              "status": "Rejected",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_TRANSITION\",\n    \"message\": \"Request rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List own order summaries",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders?status=confirmed&limit=20",
+            "header": [],
+            "description": "List own order summaries. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('No measurement values in list', () => body.data.orders.forEach(order => pm.expect(order).not.to.have.property('measurementSnapshot')));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{baseUrl}}/orders?status=confirmed&limit=20",
+                "header": [],
+                "description": "List own order summaries. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks."
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"orders\": [],\n    \"page\": 1,\n    \"limit\": 20,\n    \"hasMore\": false\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject customer production update",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{m4OrderId}}/status",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject customer production update. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/orders/{{m4OrderId}}/status",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Reject customer production update. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"in_progress\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 403,
+              "status": "Rejected",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"FORBIDDEN\",\n    \"message\": \"Request rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout M4 customer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Logout M4 customer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/logout",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Logout M4 customer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Logged out\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login M4 designer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Login M4 designer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{m4DesignerEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/login",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Login M4 designer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{m4DesignerEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000002\",\n      \"name\": \"Sample M4 User\",\n      \"email\": \"sample@example.test\",\n      \"role\": \"designer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject production state jump",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{m4OrderId}}/status",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject production state jump. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ready\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/orders/{{m4OrderId}}/status",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Reject production state jump. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"ready\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 409,
+              "status": "Rejected",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_TRANSITION\",\n    \"message\": \"Request rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Start production",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{m4OrderId}}/status",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Start production. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/orders/{{m4OrderId}}/status",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Start production. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"in_progress\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"order\": {\n      \"id\": \"000000000000000000000001\",\n      \"requestId\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"in_progress\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"priceAmount\": \"27500.00\",\n      \"currency\": \"NGN\",\n      \"completionDate\": \"2027-01-10\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"history\": [\n        {\n          \"status\": \"confirmed\",\n          \"actorId\": \"000000000000000000000002\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        },\n        {\n          \"status\": \"in_progress\",\n          \"actorId\": \"000000000000000000000003\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        }\n      ]\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Mark order ready",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{m4OrderId}}/status",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Mark order ready. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ready\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/orders/{{m4OrderId}}/status",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Mark order ready. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"ready\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"order\": {\n      \"id\": \"000000000000000000000001\",\n      \"requestId\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"ready\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"priceAmount\": \"27500.00\",\n      \"currency\": \"NGN\",\n      \"completionDate\": \"2027-01-10\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"history\": [\n        {\n          \"status\": \"confirmed\",\n          \"actorId\": \"000000000000000000000002\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        },\n        {\n          \"status\": \"in_progress\",\n          \"actorId\": \"000000000000000000000003\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        },\n        {\n          \"status\": \"ready\",\n          \"actorId\": \"000000000000000000000003\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        }\n      ]\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject designer completion",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{m4OrderId}}/status",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject designer completion. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/orders/{{m4OrderId}}/status",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Reject designer completion. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"completed\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 403,
+              "status": "Rejected",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"FORBIDDEN\",\n    \"message\": \"Request rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout M4 designer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Logout M4 designer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/logout",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Logout M4 designer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Logged out\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login M4 customer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Login M4 customer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{m4CustomerEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/login",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Login M4 customer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{m4CustomerEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000002\",\n      \"name\": \"Sample M4 User\",\n      \"email\": \"sample@example.test\",\n      \"role\": \"customer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Customer completes order",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{m4OrderId}}/status",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Customer completes order. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Ordered history', () => pm.expect(body.data.order.history.map(e=>e.status)).to.eql(['confirmed','in_progress','ready','completed']));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/orders/{{m4OrderId}}/status",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Customer completes order. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"completed\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"order\": {\n      \"id\": \"000000000000000000000001\",\n      \"requestId\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"completed\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"priceAmount\": \"27500.00\",\n      \"currency\": \"NGN\",\n      \"completionDate\": \"2027-01-10\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"history\": [\n        {\n          \"status\": \"confirmed\",\n          \"actorId\": \"000000000000000000000002\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        },\n        {\n          \"status\": \"in_progress\",\n          \"actorId\": \"000000000000000000000003\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        },\n        {\n          \"status\": \"ready\",\n          \"actorId\": \"000000000000000000000003\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        },\n        {\n          \"status\": \"completed\",\n          \"actorId\": \"000000000000000000000002\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        }\n      ]\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Retry completion without duplicate history",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{m4OrderId}}/status",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Retry completion without duplicate history. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Four events only', () => pm.expect(body.data.order.history).to.have.lengthOf(4));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/orders/{{m4OrderId}}/status",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Retry completion without duplicate history. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"completed\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"order\": {\n      \"id\": \"000000000000000000000001\",\n      \"requestId\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"completed\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"priceAmount\": \"27500.00\",\n      \"currency\": \"NGN\",\n      \"completionDate\": \"2027-01-10\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"history\": [\n        {\n          \"status\": \"confirmed\",\n          \"actorId\": \"000000000000000000000002\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        },\n        {\n          \"status\": \"in_progress\",\n          \"actorId\": \"000000000000000000000003\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        },\n        {\n          \"status\": \"ready\",\n          \"actorId\": \"000000000000000000000003\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        },\n        {\n          \"status\": \"completed\",\n          \"actorId\": \"000000000000000000000002\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        }\n      ]\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Inspect immutable order snapshot",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/{{m4OrderId}}",
+            "header": [],
+            "description": "Inspect immutable order snapshot. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Agreed snapshot unchanged', () => pm.expect(body.data.order.measurementSnapshot.values).to.eql([{label:'Chest',value:90}]));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{baseUrl}}/orders/{{m4OrderId}}",
+                "header": [],
+                "description": "Inspect immutable order snapshot. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks."
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"order\": {\n      \"id\": \"000000000000000000000001\",\n      \"requestId\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"completed\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"priceAmount\": \"27500.00\",\n      \"currency\": \"NGN\",\n      \"completionDate\": \"2027-01-10\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"history\": [\n        {\n          \"status\": \"confirmed\",\n          \"actorId\": \"000000000000000000000002\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        },\n        {\n          \"status\": \"in_progress\",\n          \"actorId\": \"000000000000000000000003\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        },\n        {\n          \"status\": \"ready\",\n          \"actorId\": \"000000000000000000000003\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        },\n        {\n          \"status\": \"completed\",\n          \"actorId\": \"000000000000000000000002\",\n          \"at\": \"2026-11-01T00:00:00.000Z\"\n        }\n      ]\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout M4 customer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Logout M4 customer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/logout",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Logout M4 customer. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Logged out\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login M4 other",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Login M4 other. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{m4OtherEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/login",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Login M4 other. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{m4OtherEmail}}\",\n  \"password\": \"{{m4AuthPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000002\",\n      \"name\": \"Sample M4 User\",\n      \"email\": \"sample@example.test\",\n      \"role\": \"customer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject unrelated request access",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/requests/{{m4RequestId}}",
+            "header": [],
+            "description": "Reject unrelated request access. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{baseUrl}}/requests/{{m4RequestId}}",
+                "header": [],
+                "description": "Reject unrelated request access. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks."
+              },
+              "code": 404,
+              "status": "Rejected",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"NOT_FOUND\",\n    \"message\": \"Request rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject unrelated order access",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/{{m4OrderId}}",
+            "header": [],
+            "description": "Reject unrelated order access. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{baseUrl}}/orders/{{m4OrderId}}",
+                "header": [],
+                "description": "Reject unrelated order access. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks."
+              },
+              "code": 404,
+              "status": "Rejected",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"NOT_FOUND\",\n    \"message\": \"Request rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Unrelated customer order list is empty",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders",
+            "header": [],
+            "description": "Unrelated customer order list is empty. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Owner isolation', () => pm.expect(body.data.orders).to.have.lengthOf(0));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{baseUrl}}/orders",
+                "header": [],
+                "description": "Unrelated customer order list is empty. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks."
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"orders\": [],\n    \"page\": 1,\n    \"limit\": 20,\n    \"hasMore\": false\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout M4 other",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Logout M4 other. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/auth/logout",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Logout M4 other. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Logged out\"\n  }\n}"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
