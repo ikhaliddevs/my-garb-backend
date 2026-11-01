@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [develop, main]
   push:
-    branches: [develop, main, feature/milestone-01-backend-foundation, feature/milestone-02-authentication-rbac, feature/milestone-03-profiles-discovery-measurements]
+    branches: [develop, main, feature/milestone-01-backend-foundation, feature/milestone-02-authentication-rbac, feature/milestone-03-profiles-discovery-measurements, feature/milestone-04-requests-orders]
 permissions:
   contents: read
 jobs:

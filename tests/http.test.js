@@ -74,7 +74,7 @@ test('logging excludes URL query, authorization, cookies, and payload', async ()
 test('OpenAPI and Swagger UI are served', async () => {
   const response = await request(app).get('/api/docs.json').expect(200);
   assert.equal(response.body.openapi, '3.0.3');
-  assert.deepEqual(Object.keys(response.body.paths).sort(), ['/api/auth/login', '/api/auth/logout', '/api/auth/me', '/api/auth/register', '/api/designers', '/api/designers/{id}', '/api/health/live', '/api/health/ready', '/api/measurements', '/api/portfolio', '/api/portfolio/{id}', '/api/profile']);
+  assert.deepEqual(Object.keys(response.body.paths).sort(), ['/api/auth/login', '/api/auth/logout', '/api/auth/me', '/api/auth/register', '/api/designers', '/api/designers/{id}', '/api/health/live', '/api/health/ready', '/api/measurements', '/api/orders', '/api/orders/{id}', '/api/orders/{id}/status', '/api/portfolio', '/api/portfolio/{id}', '/api/profile', '/api/requests', '/api/requests/{id}', '/api/requests/{id}/cancel', '/api/requests/{id}/confirm', '/api/requests/{id}/decision']);
   const ui = await request(app).get('/api/docs/').expect(200);
   assert.match(ui.text, /swagger-ui/);
   await request(app).get('/api/docs/swagger-ui-init.js').expect(200);
