@@ -4,7 +4,7 @@
 
 ## Files and preserving Postman edits
 
-- Main collection: `docs/postman/MYGARB_Backend.postman_collection.json`, folder **M4 Requests and Orders** (47 requests). Prior tracked M1/M2 items and scripts are retained; the separate tracked M3 collection remains unchanged.
+- Main collection: `docs/postman/MYGARB_Backend.postman_collection.json`, folder **M4 Requests and Orders** (55 requests). Prior tracked M1/M2 items and scripts are retained; the separate tracked M3 collection remains unchanged.
 - Blank environment: `docs/postman/M4-manual.postman_environment.json`, named **MY GARB M4 Manual (isolated)**.
 - OpenAPI: `/api/docs/` and `/api/docs.json`, API version **0.4.0**.
 
@@ -37,7 +37,7 @@ Select **MY GARB M4 Manual (isolated)** with baseUrl `http://127.0.0.3:5002/api`
 
 Run **only M4 Requests and Orders** in order, not the entire parent collection: M2's final authentication-rate-limit test intentionally exhausts its budget. M4 uses the unchanged maximum of 10 authentication attempts per 15 minutes/IP (three registrations and seven logins). Extra attempts or paused sessions may require waiting for that window to expire and logging in again. Preserve initial 401/429 outcomes alongside successful retries. A 429 is not successful login evidence.
 
-The baseline is **47 requests / 106 assertions**; manual execution remains pending. The folder registers customer/designer/unrelated-customer fixtures, completes the designer profile and portfolio, saves customer measurements, submits and cancels requests, accepts a proposal, confirms/retries confirmation, advances/completes an order, and verifies snapshot and ownership protections. Negative requests intentionally expect 400/401/403/404/409. At the end, all fixture accounts are logged out and retained for inspection. The automatic runner separately cleans only its own users/sessions/requests/orders.
+The baseline is **55 requests / 125 assertions**; manual execution remains pending. The folder registers customer/designer/unrelated-customer fixtures, completes the designer profile and portfolio, saves customer measurements, submits and cancels requests, declines with explicit response text, rejects an accepted proposal, accepts another proposal, confirms/retries confirmation, advances/completes an order, and verifies snapshot and ownership protections. Negative requests intentionally expect 400/401/403/404/409. At the end, all fixture accounts are logged out and retained for inspection. The automatic runner separately cleans only its own users/sessions/requests/orders.
 
 For a fresh full run, clear only `m4Initialized` in this dedicated environment (keep fixtureMode blank); new emails/password/dates are generated. To inspect the same fixtures, keep values and log in as the intended participant instead of rerunning registration. Do not manually replace the generated IDs with personal accounts. In a combined collection, ensure parent scripts do not override baseUrl, authentication or these m4 variables; preserve those scripts and use a temporary baseline copy to diagnose conflicts.
 

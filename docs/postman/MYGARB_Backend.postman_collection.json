@@ -3322,6 +3322,168 @@
           ]
         },
         {
+          "name": "Submit request for designer decline",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/requests",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Submit request for designer decline. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designerId\": \"{{m4DesignerId}}\",\n  \"outfitType\": \"Sample outfit\",\n  \"description\": \"Fictional sample\",\n  \"quantity\": 1,\n  \"desiredCompletionDate\": \"{{m4DesiredDate}}\",\n  \"budgetAmount\": \"25000.00\",\n  \"referenceImageUrls\": [],\n  \"shareMeasurements\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.environment.set('m4DeclinedId', body.data.request.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/requests",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Submit request for designer decline. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"designerId\": \"{{m4DesignerId}}\",\n  \"outfitType\": \"Sample outfit\",\n  \"description\": \"Fictional sample\",\n  \"quantity\": 1,\n  \"desiredCompletionDate\": \"{{m4DesiredDate}}\",\n  \"budgetAmount\": \"25000.00\",\n  \"referenceImageUrls\": [],\n  \"shareMeasurements\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 201,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"request\": {\n      \"id\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"submitted\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"desiredCompletionDate\": \"2027-01-01\",\n      \"budgetAmount\": \"25000.00\",\n      \"currency\": \"NGN\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"responseText\": null,\n      \"decidedAt\": null,\n      \"cancelledAt\": null,\n      \"confirmedAt\": null\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Submit request for proposal rejection",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/requests",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Submit request for proposal rejection. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designerId\": \"{{m4DesignerId}}\",\n  \"outfitType\": \"Sample outfit\",\n  \"description\": \"Fictional sample\",\n  \"quantity\": 1,\n  \"desiredCompletionDate\": \"{{m4DesiredDate}}\",\n  \"budgetAmount\": \"25000.00\",\n  \"referenceImageUrls\": [],\n  \"shareMeasurements\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.environment.set('m4RejectedId', body.data.request.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{baseUrl}}/requests",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Submit request for proposal rejection. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"designerId\": \"{{m4DesignerId}}\",\n  \"outfitType\": \"Sample outfit\",\n  \"description\": \"Fictional sample\",\n  \"quantity\": 1,\n  \"desiredCompletionDate\": \"{{m4DesiredDate}}\",\n  \"budgetAmount\": \"25000.00\",\n  \"referenceImageUrls\": [],\n  \"shareMeasurements\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 201,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"request\": {\n      \"id\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"submitted\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"desiredCompletionDate\": \"2027-01-01\",\n      \"budgetAmount\": \"25000.00\",\n      \"currency\": \"NGN\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"responseText\": null,\n      \"decidedAt\": null,\n      \"cancelledAt\": null,\n      \"confirmedAt\": null\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
           "name": "Logout M4 customer",
           "request": {
             "method": "POST",
@@ -3643,6 +3805,167 @@
           ]
         },
         {
+          "name": "Decline with explicit response",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/requests/{{m4DeclinedId}}/decision",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Decline with explicit response. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"declined\",\n  \"responseText\": \"Unable to meet the requested schedule.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Declined with response', () => { pm.expect(body.data.request.status).to.eql('declined'); pm.expect(body.data.request.responseText).to.eql('Unable to meet the requested schedule.'); });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/requests/{{m4DeclinedId}}/decision",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Decline with explicit response. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"decision\": \"declined\",\n  \"responseText\": \"Unable to meet the requested schedule.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"request\": {\n      \"id\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"declined\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"desiredCompletionDate\": \"2027-01-01\",\n      \"budgetAmount\": \"25000.00\",\n      \"currency\": \"NGN\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"responseText\": \"Unable to meet the requested schedule.\",\n      \"decidedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"cancelledAt\": null,\n      \"confirmedAt\": null\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Propose terms for customer rejection",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/requests/{{m4RejectedId}}/decision",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Propose terms for customer rejection. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"accepted\",\n  \"responseText\": \"Proposed sample terms.\",\n  \"priceAmount\": \"30000.00\",\n  \"completionDate\": \"{{m4ProposedDate}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/requests/{{m4RejectedId}}/decision",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Propose terms for customer rejection. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"decision\": \"accepted\",\n  \"responseText\": \"Proposed sample terms.\",\n  \"priceAmount\": \"30000.00\",\n  \"completionDate\": \"{{m4ProposedDate}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"request\": {\n      \"id\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"accepted\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"desiredCompletionDate\": \"2027-01-01\",\n      \"budgetAmount\": \"25000.00\",\n      \"currency\": \"NGN\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"responseText\": \"Proposed sample terms.\",\n      \"decidedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"cancelledAt\": null,\n      \"confirmedAt\": null,\n      \"proposal\": {\n        \"priceAmount\": \"30000.00\",\n        \"completionDate\": \"2027-01-10\"\n      }\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
           "name": "Logout M4 designer",
           "request": {
             "method": "POST",
@@ -3799,6 +4122,292 @@
                 }
               ],
               "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000002\",\n      \"name\": \"Sample M4 User\",\n      \"email\": \"sample@example.test\",\n      \"role\": \"customer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Customer rejects accepted proposal",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/requests/{{m4RejectedId}}/cancel",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Customer rejects accepted proposal. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Proposal cancelled', () => pm.expect(body.data.request.status).to.eql('cancelled'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/requests/{{m4RejectedId}}/cancel",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Customer rejects accepted proposal. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"request\": {\n      \"id\": \"000000000000000000000001\",\n      \"customerId\": \"000000000000000000000002\",\n      \"designerId\": \"000000000000000000000003\",\n      \"status\": \"cancelled\",\n      \"outfitType\": \"Sample outfit\",\n      \"quantity\": 1,\n      \"desiredCompletionDate\": \"2027-01-01\",\n      \"budgetAmount\": \"25000.00\",\n      \"currency\": \"NGN\",\n      \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n      \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n      \"description\": \"Fictional sample\",\n      \"referenceImageUrls\": [],\n      \"measurementSnapshot\": {\n        \"unit\": \"cm\",\n        \"values\": [\n          {\n            \"label\": \"Chest\",\n            \"value\": 90\n          }\n        ],\n        \"capturedAt\": \"2026-11-01T00:00:00.000Z\"\n      },\n      \"responseText\": null,\n      \"decidedAt\": null,\n      \"cancelledAt\": \"2026-11-01T00:00:00.000Z\",\n      \"confirmedAt\": null\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject declined request confirmation",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/requests/{{m4DeclinedId}}/confirm",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject declined request confirmation. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/requests/{{m4DeclinedId}}/confirm",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Reject declined request confirmation. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 409,
+              "status": "Rejected",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_TRANSITION\",\n    \"message\": \"Request rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject rejected-proposal confirmation",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/requests/{{m4RejectedId}}/confirm",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject rejected-proposal confirmation. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/requests/{{m4RejectedId}}/confirm",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-MYGARB-Request",
+                    "value": "1"
+                  }
+                ],
+                "description": "Reject rejected-proposal confirmation. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "code": 409,
+              "status": "Rejected",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_TRANSITION\",\n    \"message\": \"Request rejected\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List own accepted request summaries",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/requests?status=accepted&limit=20",
+            "header": [],
+            "description": "List own accepted request summaries. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Own accepted request without measurements', () => { pm.expect(body.data.requests).to.have.lengthOf(1); pm.expect(body.data.requests[0].id).to.eql(pm.environment.get('m4RequestId')); pm.expect(body.data.requests[0]).not.to.have.property('measurementSnapshot'); });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Fictional response example",
+              "originalRequest": {
+                "method": "GET",
+                "url": "{{baseUrl}}/requests?status=accepted&limit=20",
+                "header": [],
+                "description": "List own accepted request summaries. M4 fictional isolated fixtures only; run this folder separately from the M2 rate-limit checks."
+              },
+              "code": 200,
+              "status": "Success",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"requests\": [\n      {\n        \"id\": \"000000000000000000000001\",\n        \"customerId\": \"000000000000000000000002\",\n        \"designerId\": \"000000000000000000000003\",\n        \"status\": \"accepted\",\n        \"outfitType\": \"Sample outfit\",\n        \"quantity\": 1,\n        \"desiredCompletionDate\": \"2027-01-01\",\n        \"budgetAmount\": \"25000.00\",\n        \"currency\": \"NGN\",\n        \"createdAt\": \"2026-11-01T00:00:00.000Z\",\n        \"updatedAt\": \"2026-11-01T00:00:00.000Z\",\n        \"proposal\": {\n          \"priceAmount\": \"27500.00\",\n          \"completionDate\": \"2027-01-10\"\n        }\n      }\n    ],\n    \"page\": 1,\n    \"limit\": 20,\n    \"hasMore\": false\n  }\n}"
             }
           ]
         },

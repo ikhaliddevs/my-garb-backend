@@ -2,7 +2,7 @@
 
 Implementation scope approved 1 November 2026. Branch: `feature/milestone-04-requests-orders`, from updated develop at `b2f9498fd1881f68b420440302d657577862f14e` (merged M3 PR #4). No PR creation/merge, main modification or M5 implementation is authorized. Manual verification is **PENDING**.
 
-Local automated checks passed using an isolated verification copy: clean install/lint, 52 integration tests passed with one Windows signal skip, and 98 Postman requests / 251 assertions with zero failures (M4: 47 / 106). Publication and exact-head CI evidence are recorded in the test report and final handoff. Current audit: zero production findings; 23 unresolved development entries (11 high, 12 moderate, no critical).
+Local automated checks passed using an isolated verification copy: clean install/lint, 52 integration tests passed with one Windows signal skip, and 98 Postman requests / 251 assertions with zero failures (M4: 55 / 125). Publication and exact-head CI evidence are recorded in the test report and final handoff. Current audit: zero production findings; 23 unresolved development entries (11 high, 12 moderate, no critical).
 
 The [refined M4 contract](M4-codex-prompt.md) implements PRD FR04-FR06: structured customer requests, explicit sharing of a nonempty saved measurement snapshot, required designer response text and proposed NGN price/date, pre-confirmation cancellation, customer confirmation, and participant-only orders with sequential actor/time history. Measurements remain immutable; corrections are explicitly deferred to the later messaging milestone.
 

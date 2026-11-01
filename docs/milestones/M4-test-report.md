@@ -1,6 +1,6 @@
 # M4 test report
 
-Date: 1 November 2026 (Africa/Lagos). Implementation and local automated verification passed; remote publication/CI verification pending. **All manual M4 testing remains PENDING** until the user reports actual execution. Existing M2/M3 user evidence is unchanged.
+Date: 1 November 2026 (Africa/Lagos). Implementation, local automated verification and implementation-commit CI passed. Final expanded-collection commit CI is checked separately at delivery. **All manual M4 testing remains PENDING** until the user reports actual execution. Existing M2/M3 user evidence is unchanged.
 
 ## Environment and safety
 
@@ -14,7 +14,7 @@ Windows, Node 26.3.1, npm 11.16.0, local MongoDB Community 8.3.4. To preserve th
 | Isolated lint | PASS. |
 | Focused M4 integration suite | Initial PASS: 11 tests, 11 passed, 0 failed, 0 skipped; 15.147s. Subsequently rerun within the final full suite with journal-acknowledged writes. |
 | Final isolated `npm.cmd test` | PASS: **53 total, 52 passed, 0 failed, 1 existing Windows POSIX signal skip**, 56.017s. All M1-M3 regressions and 11 M4 tests included. |
-| Final isolated `npm.cmd run test:postman` | PASS: M1/M2 **29 requests / 94 assertions**, M3 **22 / 51**, M4 **47 / 106**; combined **98 requests / 251 assertions**, zero request/assertion/runner failures. Separate API instances, fresh cookie jars and unchanged default rate limits. Removed only each run's owned fixtures (2, 2 and 3 users respectively, plus their workflow/session records). |
+| Final isolated `npm.cmd run test:postman` | PASS: M1/M2 **29 requests / 94 assertions**, M3 **22 / 51**, M4 **55 / 125**; combined **106 requests / 270 assertions**, zero request/assertion/runner failures. Separate API instances, fresh cookie jars and unchanged default rate limits. Removed only each run's owned fixtures (2, 2 and 3 users respectively, plus their workflow/session records). |
 | Existing tracked main Postman items/scripts | Verified unchanged as parsed JSON; M4 folder appended. |
 | Existing OpenAPI paths | All 12 prior paths unchanged; eight M4 paths added. |
 | Artifact/static validation | PASS: 35 implementation/test/configuration/collection files match the verified copy; all 199 OpenAPI references resolve; blank M4 environment contains no generated data; documented PowerShell startup snippet parses without execution. |
@@ -26,9 +26,9 @@ M4 tests cover role/active-account checks, foreign access and enumeration-safe 4
 
 ## Remote, manual and dependency status
 
-Branch: `feature/milestone-04-requests-orders`; base develop `b2f9498fd1881f68b420440302d657577862f14e`. No M4 commit/push/CI result at report preparation. Prior milestone CI is not M4 evidence. PR creation and merging are prohibited by current instructions.
+Branch: `feature/milestone-04-requests-orders`; base develop `b2f9498fd1881f68b420440302d657577862f14e`. Implementation commit `e1c085196371ec01127b3d5609abd9ecd01abca5` is pushed. Its [push CI run 41314654373](https://github.com/ikhaliddevs/my-garb-backend/actions/runs/41314654373) succeeded: clean install/lint, 53 tests passed, zero failed/skipped (21.751s), M1/M2 Newman 29 requests/94 assertions, M3 22/51 and the initial M4 folder 47/106, all zero failures. The subsequent collection refinement adds executable designer decline and customer rejection of accepted proposals; the final local results above cover all 55 M4 requests. Final follow-up commit SHA and its own CI result are recorded in the delivery handoff after pushing; this implementation CI does not attest to that later commit. PR creation and merging are prohibited by current instructions.
 
-Manual baseline: 47 M4 requests / 106 assertions in the main tracked collection, with required folder and request scripts and safe fictional examples. Manual guide/environment provided; **execution and assertions remain pending**, not inferred from automated success. The folder fits the unchanged authentication limit exactly (three registrations/seven logins); extra attempts may need the 15-minute window to expire. Existing GUI Postman edits, accounts, `.env` and APIs are preserved.
+Manual baseline: 47 M4 requests / 125 assertions in the main tracked collection, with required folder and request scripts and safe fictional examples. Manual guide/environment provided; **execution and assertions remain pending**, not inferred from automated success. The folder fits the unchanged authentication limit exactly (three registrations/seven logins); extra attempts may need the 15-minute window to expire. Existing GUI Postman edits, accounts, `.env` and APIs are preserved.
 
 No dependency changes were introduced. The new audit matches M3's 23 development entries (11 high, 12 moderate, zero critical), production zero; initial registry errors were retried successfully. Known Newman/ESLint advisories and Ubuntu 22.04 runner-retirement maintenance remain unresolved; no force upgrades or audit waiver. See the prior dependency assessment and M3 report for affected tooling. These are residual development-tool risks, not a new installation blocker or a claim of production vulnerability. The supported runner scope remains trusted repository collections and fictional local/CI fixtures.
 
