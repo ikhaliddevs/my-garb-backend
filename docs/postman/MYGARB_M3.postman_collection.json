@@ -1,0 +1,1545 @@
+{
+  "info": {
+    "name": "MY GARB M3 Profiles Discovery Measurements",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Run once in order on an isolated local test API with a fresh cookie jar. Automated runner creates and cleans only its fixtures. GUI fixtures remain; never use real personal data. No request/order sharing."
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.environment.get('m3FixtureReady')) {",
+          "  if (pm.environment.get('fixtureMode') !== 'runner') {",
+          "    const suffix = pm.variables.replaceIn('{{$guid}}');",
+          "    pm.environment.set('customerEmail', 'customer-' + suffix + '@example.test');",
+          "    pm.environment.set('designerEmail', 'designer-' + suffix + '@example.test');",
+          "    pm.environment.set('authPassword', pm.variables.replaceIn('{{$guid}}') + 'Aa1!');",
+          "  }",
+          "  pm.environment.set('m3FixtureReady', 'true');",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Register M3 customer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-MYGARB-Request",
+            "value": "1"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/register",
+        "description": "Register M3 customer. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Sample Customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"customer\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "description": "Register M3 customer. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sample Customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"customer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Success",
+          "code": 201,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000001\",\n      \"name\": \"Sample Customer\",\n      \"email\": \"customer@example.test\",\n      \"role\": \"customer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Register M3 designer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-MYGARB-Request",
+            "value": "1"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/register",
+        "description": "Register M3 designer. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Sample Designer\",\n  \"email\": \"{{designerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"designer\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
+              "pm.environment.set('m3DesignerId', data.data.user.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "description": "Register M3 designer. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sample Designer\",\n  \"email\": \"{{designerEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"role\": \"designer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Success",
+          "code": 201,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000001\",\n      \"name\": \"Sample Designer\",\n      \"email\": \"designer@example.test\",\n      \"role\": \"designer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Login M3 customer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-MYGARB-Request",
+            "value": "1"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "description": "Login M3 customer. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Login M3 customer. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Success",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000001\",\n      \"name\": \"Sample Customer\",\n      \"email\": \"customer@example.test\",\n      \"role\": \"customer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Update private customer profile",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-MYGARB-Request",
+            "value": "1"
+          }
+        ],
+        "url": "{{baseUrl}}/profile",
+        "description": "Update private customer profile. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Sample Customer Updated\",\n  \"phone\": \"+1 (202) 555-0100\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
+              "pm.test('Phone retained privately', () => pm.expect(data.data.profile.phone).to.eql('+1 (202) 555-0100'));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/profile",
+            "description": "Update private customer profile. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sample Customer Updated\",\n  \"phone\": \"+1 (202) 555-0100\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Success",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"profile\": {\n      \"id\": \"000000000000000000000001\",\n      \"name\": \"Sample Customer Updated\",\n      \"phone\": \"+1 (202) 555-0100\"\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Read own customer profile",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/profile",
+        "description": "Read own customer profile. Use fictional isolated fixtures only; never export populated credentials or cookies."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
+              "pm.test('Saved name', () => pm.expect(data.data.profile.name).to.eql('Sample Customer Updated'));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/profile",
+            "description": "Read own customer profile. Use fictional isolated fixtures only; never export populated credentials or cookies."
+          },
+          "status": "Success",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"profile\": {\n      \"id\": \"000000000000000000000001\",\n      \"name\": \"Sample Customer Updated\",\n      \"phone\": \"+1 (202) 555-0100\"\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Reject profile role injection",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-MYGARB-Request",
+            "value": "1"
+          }
+        ],
+        "url": "{{baseUrl}}/profile",
+        "description": "Reject profile role injection. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role\": \"admin\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(false));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/profile",
+            "description": "Reject profile role injection. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Rejected",
+          "code": 400,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_INPUT\",\n    \"message\": \"Invalid profile, portfolio, measurement or discovery input\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Save private measurements",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-MYGARB-Request",
+            "value": "1"
+          }
+        ],
+        "url": "{{baseUrl}}/measurements",
+        "description": "Save private measurements. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"unit\": \"cm\",\n  \"values\": [\n    {\n      \"label\": \"Chest\",\n      \"value\": 90\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
+              "pm.test('Persisted values', () => pm.expect(data.data.measurements.values).to.eql([{label:'Chest',value:90}]));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/measurements",
+            "description": "Save private measurements. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unit\": \"cm\",\n  \"values\": [\n    {\n      \"label\": \"Chest\",\n      \"value\": 90\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Success",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"measurements\": {\n      \"unit\": \"cm\",\n      \"values\": [\n        {\n          \"label\": \"Chest\",\n          \"value\": 90\n        }\n      ],\n      \"updatedAt\": \"2026-10-31T00:00:00.000Z\"\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Read own measurements",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/measurements",
+        "description": "Read own measurements. Use fictional isolated fixtures only; never export populated credentials or cookies."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
+              "pm.test('Saved unit', () => pm.expect(data.data.measurements.unit).to.eql('cm'));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/measurements",
+            "description": "Read own measurements. Use fictional isolated fixtures only; never export populated credentials or cookies."
+          },
+          "status": "Success",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"measurements\": {\n      \"unit\": \"cm\",\n      \"values\": [\n        {\n          \"label\": \"Chest\",\n          \"value\": 90\n        }\n      ],\n      \"updatedAt\": \"2026-10-31T00:00:00.000Z\"\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Reject nonpositive measurement",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-MYGARB-Request",
+            "value": "1"
+          }
+        ],
+        "url": "{{baseUrl}}/measurements",
+        "description": "Reject nonpositive measurement. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"unit\": \"cm\",\n  \"values\": [\n    {\n      \"label\": \"Chest\",\n      \"value\": 0\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(false));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/measurements",
+            "description": "Reject nonpositive measurement. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unit\": \"cm\",\n  \"values\": [\n    {\n      \"label\": \"Chest\",\n      \"value\": 0\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Rejected",
+          "code": 400,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_INPUT\",\n    \"message\": \"Invalid profile, portfolio, measurement or discovery input\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Customer cannot add portfolio",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-MYGARB-Request",
+            "value": "1"
+          }
+        ],
+        "url": "{{baseUrl}}/portfolio",
+        "description": "Customer cannot add portfolio. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Sample\",\n  \"category\": \"Formal\",\n  \"imageUrl\": \"https://example.com/sample.jpg\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(false));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/portfolio",
+            "description": "Customer cannot add portfolio. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Sample\",\n  \"category\": \"Formal\",\n  \"imageUrl\": \"https://example.com/sample.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Rejected",
+          "code": 403,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"FORBIDDEN\",\n    \"message\": \"Access denied\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Logout M3 customer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-MYGARB-Request",
+            "value": "1"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/logout",
+        "description": "Logout M3 customer. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/logout",
+            "description": "Logout M3 customer. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Success",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Logged out\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Login M3 designer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-MYGARB-Request",
+            "value": "1"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "description": "Login M3 designer. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{designerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Login M3 designer. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{designerEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Success",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000001\",\n      \"name\": \"Sample Designer\",\n      \"email\": \"designer@example.test\",\n      \"role\": \"designer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Complete designer profile",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-MYGARB-Request",
+            "value": "1"
+          }
+        ],
+        "url": "{{baseUrl}}/profile",
+        "description": "Complete designer profile. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"businessName\": \"Sample Studio\",\n  \"biography\": \"Fictional studio\",\n  \"location\": \"Sample City\",\n  \"specialties\": [\n    \"Formal\"\n  ],\n  \"available\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/profile",
+            "description": "Complete designer profile. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessName\": \"Sample Studio\",\n  \"biography\": \"Fictional studio\",\n  \"location\": \"Sample City\",\n  \"specialties\": [\n    \"Formal\"\n  ],\n  \"available\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Success",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"profile\": {\n      \"id\": \"000000000000000000000001\",\n      \"name\": \"Sample Designer\",\n      \"businessName\": \"Sample Studio\",\n      \"biography\": \"Fictional portfolio\",\n      \"location\": \"Sample City\",\n      \"specialties\": [\n        \"Formal\"\n      ],\n      \"available\": true,\n      \"portfolio\": []\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Designer cannot read measurements",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/measurements",
+        "description": "Designer cannot read measurements. Use fictional isolated fixtures only; never export populated credentials or cookies."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(false));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/measurements",
+            "description": "Designer cannot read measurements. Use fictional isolated fixtures only; never export populated credentials or cookies."
+          },
+          "status": "Rejected",
+          "code": 403,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"FORBIDDEN\",\n    \"message\": \"Access denied\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Reject unsafe portfolio URL",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-MYGARB-Request",
+            "value": "1"
+          }
+        ],
+        "url": "{{baseUrl}}/portfolio",
+        "description": "Reject unsafe portfolio URL. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Sample\",\n  \"category\": \"Formal\",\n  \"imageUrl\": \"http://127.0.0.1/private\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(false));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/portfolio",
+            "description": "Reject unsafe portfolio URL. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Sample\",\n  \"category\": \"Formal\",\n  \"imageUrl\": \"http://127.0.0.1/private\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Rejected",
+          "code": 400,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_INPUT\",\n    \"message\": \"Invalid profile, portfolio, measurement or discovery input\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Add portfolio image reference",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-MYGARB-Request",
+            "value": "1"
+          }
+        ],
+        "url": "{{baseUrl}}/portfolio",
+        "description": "Add portfolio image reference. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Sample garment\",\n  \"category\": \"Formal\",\n  \"imageUrl\": \"https://example.com/sample.jpg\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
+              "pm.environment.set('m3PortfolioId', data.data.entry.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/portfolio",
+            "description": "Add portfolio image reference. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Sample garment\",\n  \"category\": \"Formal\",\n  \"imageUrl\": \"https://example.com/sample.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Success",
+          "code": 201,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"entry\": {\n      \"id\": \"000000000000000000000002\",\n      \"title\": \"Sample garment\",\n      \"category\": \"Formal\",\n      \"imageUrl\": \"https://example.com/sample.jpg\"\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Browse public discovery",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/designers?q=Sample&location=Sample%20City&available=true&limit=50",
+        "description": "Browse public discovery. Use fictional isolated fixtures only; never export populated credentials or cookies."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
+              "pm.test('Designer found', () => pm.expect(data.data.designers.some(d => d.id === pm.environment.get('m3DesignerId'))).to.eql(true));",
+              "pm.test('No private fields', () => data.data.designers.forEach(d => pm.expect(Object.keys(d).sort()).to.eql(['available','biography','businessName','id','location','name','portfolio','specialties'])));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/designers?q=Sample&location=Sample%20City&available=true&limit=50",
+            "description": "Browse public discovery. Use fictional isolated fixtures only; never export populated credentials or cookies."
+          },
+          "status": "Success",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"designers\": [\n      {\n        \"id\": \"000000000000000000000001\",\n        \"name\": \"Sample Designer\",\n        \"businessName\": \"Sample Studio\",\n        \"biography\": \"Fictional portfolio\",\n        \"location\": \"Sample City\",\n        \"specialties\": [\n          \"Formal\"\n        ],\n        \"available\": true,\n        \"portfolio\": [\n          {\n            \"id\": \"000000000000000000000002\",\n            \"title\": \"Sample garment\",\n            \"category\": \"Formal\",\n            \"imageUrl\": \"https://example.com/sample.jpg\"\n          }\n        ]\n      }\n    ],\n    \"page\": 1,\n    \"limit\": 50,\n    \"hasMore\": false\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Read public designer detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/designers/{{m3DesignerId}}",
+        "description": "Read public designer detail. Use fictional isolated fixtures only; never export populated credentials or cookies."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
+              "pm.test('Public portfolio', () => pm.expect(data.data.designer.portfolio).to.have.lengthOf(1));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/designers/{{m3DesignerId}}",
+            "description": "Read public designer detail. Use fictional isolated fixtures only; never export populated credentials or cookies."
+          },
+          "status": "Success",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"designer\": {\n      \"id\": \"000000000000000000000001\",\n      \"name\": \"Sample Designer\",\n      \"businessName\": \"Sample Studio\",\n      \"biography\": \"Fictional portfolio\",\n      \"location\": \"Sample City\",\n      \"specialties\": [\n        \"Formal\"\n      ],\n      \"available\": true,\n      \"portfolio\": [\n        {\n          \"id\": \"000000000000000000000002\",\n          \"title\": \"Sample garment\",\n          \"category\": \"Formal\",\n          \"imageUrl\": \"https://example.com/sample.jpg\"\n        }\n      ]\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Reject unbounded pagination",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/designers?limit=51",
+        "description": "Reject unbounded pagination. Use fictional isolated fixtures only; never export populated credentials or cookies."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(false));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/designers?limit=51",
+            "description": "Reject unbounded pagination. Use fictional isolated fixtures only; never export populated credentials or cookies."
+          },
+          "status": "Rejected",
+          "code": 400,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_INPUT\",\n    \"message\": \"Invalid profile, portfolio, measurement or discovery input\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Delete own portfolio entry",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-MYGARB-Request",
+            "value": "1"
+          }
+        ],
+        "url": "{{baseUrl}}/portfolio/{{m3PortfolioId}}",
+        "description": "Delete own portfolio entry. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/portfolio/{{m3PortfolioId}}",
+            "description": "Delete own portfolio entry. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Success",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Portfolio entry deleted\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Designer no longer eligible",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/designers/{{m3DesignerId}}",
+        "description": "Designer no longer eligible. Use fictional isolated fixtures only; never export populated credentials or cookies."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(false));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/designers/{{m3DesignerId}}",
+            "description": "Designer no longer eligible. Use fictional isolated fixtures only; never export populated credentials or cookies."
+          },
+          "status": "Rejected",
+          "code": 404,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"NOT_FOUND\",\n    \"message\": \"Record not found\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Logout M3 designer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-MYGARB-Request",
+            "value": "1"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/logout",
+        "description": "Logout M3 designer. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "{",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json();",
+              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "Fictional response example",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/logout",
+            "description": "Logout M3 designer. Use fictional isolated fixtures only; never export populated credentials or cookies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Success",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Logged out\"\n  }\n}"
+        }
+      ]
+    }
+  ]
+}

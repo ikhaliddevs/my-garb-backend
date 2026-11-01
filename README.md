@@ -1,6 +1,6 @@
 ﻿# MY GARB PHASONABLE Backend
 
-M1 foundation is approved and merged into `develop`. M2 adds accounts and role-based access only. The [PRD](docs/PRD.md) defines the product scope; see [M2 summary](docs/milestones/M2-summary.md) and [test report](docs/milestones/M2-test-report.md) for evidence. Profiles, portfolios, discovery, requests, orders and other business features remain deferred.
+M1/M2 provide the foundation and authentication. M3 adds profiles, designer portfolios, public discovery and private customer measurements. The [PRD](docs/PRD.md) defines the product scope; see [M3 summary](docs/milestones/M3-summary.md) and [test report](docs/milestones/M3-test-report.md) for current verification status. Requests, shared snapshots, orders and other business features remain deferred.
 
 ## Setup
 
@@ -29,7 +29,7 @@ Startup validates configuration, connects MongoDB and creates the authentication
 
 ## API and authentication
 
-Default base URL: `http://localhost:5000/api`. Swagger UI: `/api/docs/`; JSON: `/api/docs.json` (title `MY GARB PHASONABLE Backend`, OpenAPI 3.0.3, API version 0.2.0).
+Default base URL: `http://localhost:5000/api`. Swagger UI: `/api/docs/`; JSON: `/api/docs.json` (title `MY GARB PHASONABLE Backend`, OpenAPI 3.0.3, API version 0.3.0).
 
 | Method/path | Behavior |
 | --- | --- |
@@ -56,7 +56,7 @@ Setup creates one active admin with a bcrypt hash. A rerun for an existing activ
 
 ## Postman and manual verification
 
-Run `npm run test:postman` for automated M2 verification with Newman. The runner starts the actual API on a free loopback port against only local `mygarb_phasonable_test`, verifies the API contract, uses a fresh in-memory cookie jar and random fictional credentials, then cleans only its own users/sessions and closes the server. It does not load or modify development `.env`. The unchanged default rate limit is tested by the final expected 429 response.
+Run `npm run test:postman` for automated M1/M2 and M3 verification with Newman. Each collection gets a separate actual API on a free loopback port against only local `mygarb_phasonable_test`, a fresh in-memory cookie jar and random fictional credentials. The runner cleans only its own users/sessions and closes the server. It does not load or modify development `.env`. The unchanged default rate limit is tested by the final expected M2 429 response; M3 uses a fresh API instance and its own fixtures.
 
 Import `docs/postman/MYGARB_Backend.postman_collection.json` and `docs/postman/local.postman_environment.json` into Postman and select **MY GARB Local**. For GUI execution, point `baseUrl` at a separately configured local test API, use a fresh cookie jar, and run the collection once in order. A blank `authPassword` generates an ephemeral fictional password for the run. Do not export populated credentials, cookies or raw execution reports. GUI runs retain their fictional accounts; the automated runner cleans its own fixtures. Wait 15 minutes before repeating GUI runs after the final rate-limit test.
 
@@ -70,4 +70,27 @@ Run `npm ci`, `npm run lint`, `npm test`. Tests connect only to the validated is
 
 App creation, database lifecycle and startup remain in `src/app.js`, `src/config/database.js` and `src/server.js`. Authentication uses focused models, validators, services, middleware and routes. `scripts/setup-admin.js` is the explicit bootstrap entrypoint. Tests cover auth and the M1 regression; OpenAPI lives in `src/docs/openapi.json`.
 
-M2 uses `feature/milestone-02-authentication-rbac` and a PR targeting `develop`. Keep `.env` and `AGENTS.md` ignored/untracked. CI runs Node 24 with MongoDB 8.0. Check the exact pushed SHA, review and request separate merge authorization. `main` remains stable. See the actual M2 report for local/CI results and limitations; M3 is only a prepared prompt, not implementation approval.
+M3 uses `feature/milestone-03-profiles-discovery-measurements`. Keep `.env` and `AGENTS.md` ignored/untracked. CI runs Node 24 with MongoDB 8.0 on the retained Ubuntu 22.04 runner. M3 PR creation is deferred by user instruction; no merge or M4 work is authorized. See the M3 report for local/CI results and limitations.
+
+## M3 profiles, portfolios and measurements
+
+No new dependencies or environment variables are required. Startup creates the additional user discovery indexes through the existing explicit database preparation step. Existing users need no migration: absent optional profile fields read as empty defaults. All M3 data is embedded in the owning user document, so updates and the portfolio cap are atomic on standalone MongoDB. Existing accounts, credentials and sessions are preserved.
+
+| Method/path | Access and behavior |
+| --- | --- |
+| GET/PATCH `/profile` | Customer/designer own profile; admin forbidden. Customer edits name/private phone. Designer edits businessName, biography, location, specialties, available. |
+| POST `/portfolio` | Designer adds title/category/imageUrl; maximum 50 entries. |
+| DELETE `/portfolio/:id` | Designer removes own entry; JSON `{}` required. Foreign/missing entry returns 404. |
+| GET `/designers` | Public; q (literal name/business/specialty substring), location (exact ignoring case), available=true/false, page=1..1000, limit=1..50 (default 20). Returns designers/page/limit/hasMore. |
+| GET `/designers/:id` | Public eligible active designer and portfolio; otherwise 404. |
+| GET/PUT `/measurements` | Customer's own private set only. No set returns null. PUT replaces unit and values; empty values clears them. |
+
+Every M3 write requires JSON and `X-MYGARB-Request: 1`, with the existing Origin/Fetch Metadata policy. Unknown fields, owner selectors and unsupported query parameters are rejected. Protected endpoints check the current active account and role. Profiles cannot update email identity, credentials, role or status. No designer/admin endpoint can read another customer's profile or measurements.
+
+Customer phone is optional, private and at most 30 characters; blank clears it. Allowed characters are digits, optional leading +, spaces, parentheses, dots and hyphens (nonempty length at least 3). Name/businessName/location are at most 100 characters, biography 2000, specialties 10 unique labels of 60 characters. Portfolio title/category limits are 100/60. Text is stored as plain text; future clients must render it safely. Image references require HTTPS external DNS hostnames, maximum 2048 characters, no credentials, IP literals, local/internal/test names, fragments or non-443 ports. The API never fetches URLs or verifies that content is an image. `https://example.com/sample.jpg` is an illustrative reference, not a promised hosted asset; binary uploads remain deferred.
+
+Discovery requires business name, location, at least one specialty and portfolio entry. Public fields are exactly id, name, businessName, biography, location, specialties, available and portfolio (entry id/title/category/imageUrl). Email, private phone, measurements, account status, password hashes and sessions are excluded. Unavailable designers remain visible unless filtered; suspended/ineligible accounts do not. Stable ID pagination uses bounded offsets; concurrent edits can shift pages. Substring search uses escaped literals and a three-second database timeout, with role/status/availability/location indexes; it is intended for MVP scale.
+
+Measurements use `{"unit":"cm","values":[{"label":"Chest","value":90}]}` (or `in`). Maximum 50 unique case-insensitive labels of 60 characters; numbers must be finite, positive and at most 1000. Units are explicit; no implicit conversion. PUT replaces the whole set with a server timestamp; last completed write wins. Sharing and immutable request/order snapshots require a later approved milestone.
+
+Import [M3 Postman collection](docs/postman/MYGARB_M3.postman_collection.json) with the separate [M3 manual environment](docs/postman/M3-manual.postman_environment.json), preserving your edited collections and existing environment. Follow [M3 startup instructions and manual examples](docs/postman/M3-guide.md) to launch a second API against the test database with an independent cookie hostname. Manual GUI checks remain distinct from automated evidence; remaining M2 customer/designer identity assertions require alignment with custom local accounts and rerunning. The user reported the rate-limit test passed; the latest designer login returned 429 while the limit was active, so successful login/identity confirmation remains pending.

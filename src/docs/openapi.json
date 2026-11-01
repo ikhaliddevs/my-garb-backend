@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "MY GARB PHASONABLE Backend",
-    "version": "0.2.0",
-    "description": "MY GARB foundation and authentication. Register customer/designer accounts, then log in using an HttpOnly session cookie. Auth POSTs require JSON and X-MYGARB-Request: 1. Browser origins must be configured; cross-site fetches are rejected. Cookies use SameSite=Strict, Secure in production, and Path=/api. Sessions default to one hour and logout revokes the current session server-side. Login/register share 10 attempts per 15 minutes/IP. General API limit is 100/minute/IP; health probes are exempt."
+    "version": "0.3.0",
+    "description": "MY GARB foundation and authentication. Register customer/designer accounts, then log in using an HttpOnly session cookie. Auth POSTs require JSON and X-MYGARB-Request: 1. Browser origins must be configured; cross-site fetches are rejected. Cookies use SameSite=Strict, Secure in production, and Path=/api. Sessions default to one hour and logout revokes the current session server-side. Login/register share 10 attempts per 15 minutes/IP. General API limit is 100/minute/IP; health probes are exempt. M3 adds owner profiles, designer portfolios, public discovery and private customer measurements. Every write requires JSON and X-MYGARB-Request: 1. No request/order sharing is implemented."
   },
   "servers": [
     {
@@ -708,6 +708,1313 @@
           }
         }
       }
+    },
+    "/api/profile": {
+      "get": {
+        "summary": "Read own customer or designer profile",
+        "description": "Customer/designer only; admin forbidden. Owner is derived from the session. Query parameters are rejected. Phone is private. Designers receive their own full portfolio.",
+        "tags": [
+          "M3 Profiles and discovery"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "profile": {
+                          "oneOf": [
+                            {
+                              "$ref": "#/components/schemas/CustomerProfile"
+                            },
+                            {
+                              "$ref": "#/components/schemas/DesignerProfile"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "profile"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "profile": {
+                      "id": "000000000000000000000001",
+                      "name": "Sample Customer",
+                      "phone": ""
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or query; unknown fields rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session missing, revoked, expired or inactive account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role forbidden or CSRF policy rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not eligible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Sanitized internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update own profile",
+        "description": "Customer: name and private phone only. Designer: businessName, biography, location, specialties, available only. Empty designer fields can remove discovery eligibility. Email, role, status, passwordHash, IDs and unknown fields rejected. At least one field required.",
+        "tags": [
+          "M3 Profiles and discovery"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-MYGARB-Request",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/CustomerProfilePatch"
+                  },
+                  {
+                    "$ref": "#/components/schemas/DesignerProfilePatch"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "profile": {
+                          "oneOf": [
+                            {
+                              "$ref": "#/components/schemas/CustomerProfile"
+                            },
+                            {
+                              "$ref": "#/components/schemas/DesignerProfile"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "profile"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or query; unknown fields rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session missing, revoked, expired or inactive account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role forbidden or CSRF policy rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not eligible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body exceeds 16 KB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Sanitized internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/portfolio": {
+      "post": {
+        "summary": "Add own designer portfolio entry",
+        "description": "Designer only. Maximum 50 entries, enforced atomically. No binary uploads or server-side URL fetching.",
+        "tags": [
+          "M3 Profiles and discovery"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-MYGARB-Request",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PortfolioInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "entry": {
+                          "$ref": "#/components/schemas/PortfolioEntry"
+                        }
+                      },
+                      "required": [
+                        "entry"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "entry": {
+                      "id": "000000000000000000000002",
+                      "title": "Sample garment",
+                      "category": "Formal",
+                      "imageUrl": "https://example.com/sample.jpg"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or query; unknown fields rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session missing, revoked, expired or inactive account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role forbidden or CSRF policy rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not eligible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Portfolio limit reached or account unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body exceeds 16 KB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Sanitized internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/portfolio/{id}": {
+      "delete": {
+        "summary": "Delete own designer portfolio entry",
+        "description": "Designer only. Send JSON {}. Foreign or missing entries return 404. Removing the last entry removes discovery eligibility.",
+        "tags": [
+          "M3 Profiles and discovery"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{24}$"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-MYGARB-Request",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or query; unknown fields rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session missing, revoked, expired or inactive account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role forbidden or CSRF policy rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not eligible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body exceeds 16 KB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Sanitized internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/designers": {
+      "get": {
+        "summary": "Browse eligible active designers",
+        "description": "Requires nonempty business name, location, specialties and at least one portfolio entry. Public fields are exactly those in DesignerProfile. No email, phone, measurements, account status, hashes or sessions. Stable ID order; offset pagination may shift during concurrent edits. Literal case-insensitive substring name/businessName/specialty search; exact case-insensitive location. Unknown, repeated and nested query parameters are rejected. Query timeout 3 seconds; bounded substring search is intended for MVP scale.",
+        "tags": [
+          "M3 Profiles and discovery"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "minLength": 1
+            }
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "minLength": 1
+            }
+          },
+          {
+            "name": "available",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "designers": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/DesignerProfile"
+                          }
+                        },
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "hasMore": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "designers",
+                        "page",
+                        "limit",
+                        "hasMore"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "designers": [
+                      {
+                        "id": "000000000000000000000001",
+                        "name": "Sample Designer",
+                        "businessName": "Sample Studio",
+                        "biography": "Fictional portfolio",
+                        "location": "Sample City",
+                        "specialties": [
+                          "Formal"
+                        ],
+                        "available": true,
+                        "portfolio": [
+                          {
+                            "id": "000000000000000000000002",
+                            "title": "Sample garment",
+                            "category": "Formal",
+                            "imageUrl": "https://example.com/sample.jpg"
+                          }
+                        ]
+                      }
+                    ],
+                    "page": 1,
+                    "limit": 20,
+                    "hasMore": false
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or query; unknown fields rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session missing, revoked, expired or inactive account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role forbidden or CSRF policy rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not eligible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Sanitized internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/designers/{id}": {
+      "get": {
+        "summary": "Read eligible public designer profile and portfolio",
+        "description": "Ineligible, suspended, non-designer and missing IDs return 404; malformed IDs return 400. Query parameters rejected.",
+        "tags": [
+          "M3 Profiles and discovery"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{24}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "designer": {
+                          "$ref": "#/components/schemas/DesignerProfile"
+                        }
+                      },
+                      "required": [
+                        "designer"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "designer": {
+                      "id": "000000000000000000000001",
+                      "name": "Sample Designer",
+                      "businessName": "Sample Studio",
+                      "biography": "Fictional portfolio",
+                      "location": "Sample City",
+                      "specialties": [
+                        "Formal"
+                      ],
+                      "available": true,
+                      "portfolio": [
+                        {
+                          "id": "000000000000000000000002",
+                          "title": "Sample garment",
+                          "category": "Formal",
+                          "imageUrl": "https://example.com/sample.jpg"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or query; unknown fields rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session missing, revoked, expired or inactive account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role forbidden or CSRF policy rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not eligible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Sanitized internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/measurements": {
+      "get": {
+        "summary": "Read own private customer measurements",
+        "description": "Customer only. No set yet returns null. Designers/admins cannot access this endpoint, even for themselves. No user selector, sharing or request/order snapshot in M3.",
+        "tags": [
+          "M3 Profiles and discovery"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "measurements": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "unit": {
+                              "type": "string",
+                              "enum": [
+                                "cm",
+                                "in"
+                              ]
+                            },
+                            "values": {
+                              "type": "array",
+                              "maxItems": 50,
+                              "description": "Labels unique ignoring case. Empty array clears values. PUT replaces the full set and explicitly declares its unit; no automatic conversion.",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                  "label": {
+                                    "type": "string",
+                                    "maxLength": 60,
+                                    "minLength": 1
+                                  },
+                                  "value": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "exclusiveMinimum": true,
+                                    "maximum": 1000
+                                  }
+                                },
+                                "required": [
+                                  "label",
+                                  "value"
+                                ]
+                              }
+                            },
+                            "updatedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": [
+                            "unit",
+                            "values",
+                            "updatedAt"
+                          ],
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "measurements"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "measurements": null
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or query; unknown fields rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session missing, revoked, expired or inactive account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role forbidden or CSRF policy rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not eligible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Sanitized internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Replace own private customer measurements",
+        "description": "Customer only. Full replacement, last completed write wins. No unit conversion. Maximum 50 labels, 60 characters each, values >0 and <=1000; cm or in. Never accepts owner IDs. Empty values clears the set.",
+        "tags": [
+          "M3 Profiles and discovery"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-MYGARB-Request",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeasurementInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "measurements": {
+                          "$ref": "#/components/schemas/Measurements"
+                        }
+                      },
+                      "required": [
+                        "measurements"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "measurements": {
+                      "unit": "cm",
+                      "values": [
+                        {
+                          "label": "Chest",
+                          "value": 90
+                        }
+                      ],
+                      "updatedAt": "2026-10-31T00:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or query; unknown fields rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session missing, revoked, expired or inactive account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role forbidden or CSRF policy rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not eligible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body exceeds 16 KB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Sanitized internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -863,6 +2170,288 @@
             ]
           }
         }
+      },
+      "CustomerProfile": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{24}$"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 30
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "phone"
+        ]
+      },
+      "CustomerProfilePatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 30,
+            "description": "Optional private phone. Digits, leading +, spaces, parentheses, dots and hyphens; blank clears it. Nonempty length 3-30."
+          }
+        },
+        "required": [],
+        "minProperties": 1
+      },
+      "DesignerProfilePatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "businessName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "biography": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "specialties": {
+            "type": "array",
+            "maxItems": 10,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "maxLength": 60,
+              "minLength": 1
+            },
+            "description": "Case-insensitive unique nonempty specialties."
+          },
+          "available": {
+            "type": "boolean"
+          }
+        },
+        "required": [],
+        "minProperties": 1
+      },
+      "PortfolioInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          },
+          "category": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 1
+          },
+          "imageUrl": {
+            "type": "string",
+            "maxLength": 2048,
+            "format": "uri",
+            "description": "HTTPS external DNS hostname only; no credentials, IP literals, local/internal/test names, non-443 ports or fragments. Never fetched by the server; remote availability and image content are not verified."
+          }
+        },
+        "required": [
+          "title",
+          "category",
+          "imageUrl"
+        ]
+      },
+      "PortfolioEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{24}$"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          },
+          "category": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 1
+          },
+          "imageUrl": {
+            "type": "string",
+            "maxLength": 2048,
+            "format": "uri",
+            "description": "HTTPS external DNS hostname only; no credentials, IP literals, local/internal/test names, non-443 ports or fragments. Never fetched by the server; remote availability and image content are not verified."
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "category",
+          "imageUrl"
+        ]
+      },
+      "DesignerProfile": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{24}$"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "businessName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "biography": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "specialties": {
+            "type": "array",
+            "maxItems": 10,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "maxLength": 60,
+              "minLength": 1
+            },
+            "description": "Case-insensitive unique nonempty specialties."
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "portfolio": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/PortfolioEntry"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "businessName",
+          "biography",
+          "location",
+          "specialties",
+          "available",
+          "portfolio"
+        ]
+      },
+      "MeasurementInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "unit": {
+            "type": "string",
+            "enum": [
+              "cm",
+              "in"
+            ]
+          },
+          "values": {
+            "type": "array",
+            "maxItems": 50,
+            "description": "Labels unique ignoring case. Empty array clears values. PUT replaces the full set and explicitly declares its unit; no automatic conversion.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "maxLength": 60,
+                  "minLength": 1
+                },
+                "value": {
+                  "type": "number",
+                  "minimum": 0,
+                  "exclusiveMinimum": true,
+                  "maximum": 1000
+                }
+              },
+              "required": [
+                "label",
+                "value"
+              ]
+            }
+          }
+        },
+        "required": [
+          "unit",
+          "values"
+        ]
+      },
+      "Measurements": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "unit": {
+            "type": "string",
+            "enum": [
+              "cm",
+              "in"
+            ]
+          },
+          "values": {
+            "type": "array",
+            "maxItems": 50,
+            "description": "Labels unique ignoring case. Empty array clears values. PUT replaces the full set and explicitly declares its unit; no automatic conversion.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "maxLength": 60,
+                  "minLength": 1
+                },
+                "value": {
+                  "type": "number",
+                  "minimum": 0,
+                  "exclusiveMinimum": true,
+                  "maximum": 1000
+                }
+              },
+              "required": [
+                "label",
+                "value"
+              ]
+            }
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "unit",
+          "values",
+          "updatedAt"
+        ]
       }
     },
     "securitySchemes": {
