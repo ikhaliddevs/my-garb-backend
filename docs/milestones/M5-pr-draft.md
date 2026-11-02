@@ -1,6 +1,7 @@
 # M5 PR draft (text only; no PR created)
 
-Base: `develop`  
+Base: `develop`
+
 Head: `feature/milestone-05-messages-notifications`
 
 Title:
