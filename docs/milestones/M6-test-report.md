@@ -1,6 +1,6 @@
 # M6 automated test report
 
-Executed 2 November 2026 (Africa/Lagos). Local implementation and verification passed. Publication and exact-head CI are pending at this implementation commit; this is not yet a claim of remote verification. Manual Postman repetition remains **DEFERRED by user choice**.
+Executed 2 November 2026 (Africa/Lagos). Implementation is published; local verification and exact-implementation-SHA CI passed. Manual Postman repetition remains **DEFERRED by user choice**. The final documentation-head CI is checked separately in the delivery handoff.
 
 ## Prerequisite and preservation
 
@@ -34,4 +34,6 @@ Development dependency risks are not waived; Ubuntu 22.04 runner retirement need
 
 ## Publication
 
-Branch: `feature/milestone-06-administration-handover`. CI workflow adds only this feature branch to the existing push trigger. Node 24, MongoDB 8.0, Ubuntu 22.04 and all check steps are retained. Commit/push and exact-head CI verification are authorized; no PR actions or main changes. Actual remote results will be appended after verification; final documentation-head CI is recorded in the delivery handoff and ignored local notes to avoid self-referential SHA metadata.
+Branch: `feature/milestone-06-administration-handover`. Implementation commit **5207abf881c17250d8c9a6dfd6362072ee48721c** is pushed. Exact-SHA [CI 41398832754](https://github.com/ikhaliddevs/my-garb-backend/actions/runs/41398832754), job **125125964149**, passed initialization, clean install, lint, integration and Newman. Downloaded logs confirm **75 tests passed, 0 failed, 0 skipped (36.799s)**; Newman **29/94 + 22/51 + 55/125 + 52/117 + 20/43 = 178 requests / 430 assertions**, zero failures. Ubuntu runs the signal test skipped on Windows.
+
+CI adds only this feature branch to the existing push trigger. Node 24, MongoDB 8.0, Ubuntu 22.04 and all check steps are retained. GitHub read-only checks confirm no M6 PR exists, remote develop remains the M5 merge, and main is unchanged. No PR created/modified/merged. This final documentation update reuses valid local evidence and changes no application/test/dependency files. Its own exact-head CI is verified in the delivery handoff and ignored local notes to avoid self-referential commit metadata.

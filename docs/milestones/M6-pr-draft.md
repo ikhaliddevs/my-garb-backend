@@ -12,6 +12,6 @@ Adds admin-only bounded user/request/order metadata lists and customer/designer 
 
 Includes OpenAPI 0.6.0, an M6 Postman folder and blank optional environment, regression/security/race and complete-journey tests, milestone reports and final backend demonstration/setup guidance. Preserves existing APIs/accounts/settings. Existing processes need a user-scheduled restart before relying on M6 revocation across every instance.
 
-Local validation: clean install/lint passed; 75 tests total, 74 passed, zero failed, one Windows signal skip. Newman 178 requests/430 assertions, zero failures. See `docs/milestones/M6-test-report.md` and the feature branch checks for exact-head CI evidence. Manual Postman repetition is deferred. Production audit zero; 23 development findings remain documented. No frontend or deployment included.
+Local validation: clean install/lint passed; 75 tests total, 74 passed, zero failed, one Windows signal skip. Newman 178 requests/430 assertions, zero failures. Implementation CI 41398832754 at 5207abf passed clean install/lint, 75 tests with zero failures/skips and the same Newman totals. See `docs/milestones/M6-test-report.md` and the feature branch checks for final documentation-head CI evidence. Manual Postman repetition is deferred. Production audit zero; 23 development findings remain documented. No frontend or deployment included.
 
 This file is copyable text only. No PR has been created, modified or merged by this work.
