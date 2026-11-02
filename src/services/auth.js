@@ -35,7 +35,7 @@ function createAuthService({ models, config }) {
     const now = Math.floor(Date.now() / 1000);
     const exp = now + config.sessionTtlSeconds;
     const token = jwt.sign({ sub: String(user._id), jti, iat: now, exp }, config.jwtSecret, { algorithm: 'HS256', issuer: ISSUER, audience: AUDIENCE });
-    await models.Session.create({ tokenHash: digest(jti), userId: user._id, expiresAt: new Date(exp * 1000) });
+    await models.Session.create({ tokenHash: digest(jti), userId: user._id, sessionVersion: user.sessionVersion || 0, expiresAt: new Date(exp * 1000) });
     return { user: safeUser(user), token };
   }
   async function authenticate(token) {
@@ -48,7 +48,7 @@ function createAuthService({ models, config }) {
     const session = await models.Session.findOne({ tokenHash: digest(claims.jti), userId: claims.sub, expiresAt: { $gt: new Date() } });
     if (!session) throw unauthenticated();
     const user = await models.User.findById(claims.sub);
-    if (!user || user.status !== 'active') throw unauthenticated();
+    if (!user || user.status !== 'active' || (session.sessionVersion || 0) !== (user.sessionVersion || 0)) throw unauthenticated();
     return { user: safeUser(user), sessionId: session._id };
   }
   async function logout(sessionId) {

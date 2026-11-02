@@ -1,4 +1,5 @@
 const express = require('express');
+const { adminRoutes } = require('./routes/admin');
 const { communicationRoutes } = require('./routes/communication');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -33,6 +34,7 @@ function createApp({ config, database, logger = console, rateLimitMax = 100, aut
   app.use(express.json({ limit: '16kb' }));
   app.use(cookieParser());
   app.use('/api/auth', authRoutes({ config, database, authRateLimitMax }));
+  app.use('/api/admin', adminRoutes({ config, database }));
   app.use('/api', profileRoutes({ config, database }));
   app.use('/api', orderRoutes({ config, database }));
   app.use('/api', communicationRoutes({ config, database }));

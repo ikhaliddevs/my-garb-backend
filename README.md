@@ -1,6 +1,6 @@
 ﻿# MY GARB PHASONABLE Backend
 
-M1-M4 provide authentication, profiles, discovery, immutable shared measurements, requests and recoverable orders. M5 adds private text conversations, exact versioned measurement consent before production, and durable in-app notifications. See the [PRD](docs/PRD.md), [M5 summary](docs/milestones/M5-summary.md) and [actual test report](docs/milestones/M5-test-report.md). Automated verification is the default; full manual Postman repetition is deferred by user choice. Administration workflows and payments are not implemented.
+M1-M4 provide authentication, profiles, discovery, immutable shared measurements, requests and recoverable orders. M5 adds private text conversations, exact versioned measurement consent before production, and durable in-app notifications. M6 adds bounded administration and persistent suspension revocation. See the [PRD](docs/PRD.md), [M6 summary](docs/milestones/M6-summary.md), [actual test report](docs/milestones/M6-test-report.md) and [backend handover](docs/backend-demonstration.md). Automated verification is the default; full manual Postman repetition is deferred by user choice. Payments and frontend are not implemented.
 
 ## Setup
 
@@ -29,7 +29,7 @@ Startup validates configuration, connects MongoDB and creates authentication, re
 
 ## API and authentication
 
-Default base URL: `http://localhost:5000/api`. Swagger UI: `/api/docs/`; JSON: `/api/docs.json` (title `MY GARB PHASONABLE Backend`, OpenAPI 3.0.3, API version 0.4.0).
+Default base URL: `http://localhost:5000/api`. Swagger UI: `/api/docs/`; JSON: `/api/docs.json` (title `MY GARB PHASONABLE Backend`, OpenAPI 3.0.3, API version 0.6.0).
 
 | Method/path | Behavior |
 | --- | --- |
@@ -56,11 +56,11 @@ Setup creates one active admin with a bcrypt hash. A rerun for an existing activ
 
 ## Postman and manual verification
 
-Run `npm run test:postman` for automated M1/M2, M3, M4 and M5 verification with Newman. Each milestone gets a separate actual API on a free loopback port against only local `mygarb_phasonable_test`, a fresh in-memory cookie jar and random fictional credentials. The runner cleans only its own users/sessions/requests/orders/notifications and closes the server. It does not load or modify development `.env`. The unchanged default rate limit is tested by the final expected M2 429 response; M3 and the M4 folder use fresh API instances and their own fixtures. Run the M4 folder alone for manual testing; do not run it after the M2 rate-limit request in the same API window.
+Run `npm run test:postman` for automated M1/M2, M3, M4, M5 and M6 verification with Newman. Each milestone gets a separate actual API on a free loopback port against only local `mygarb_phasonable_test`, a fresh in-memory cookie jar and random fictional credentials. The runner cleans only its own users/sessions/requests/orders/notifications and closes the server. It does not load or modify development `.env`. The unchanged default rate limit is tested by the final expected M2 429 response; M3 and the M4 folder use fresh API instances and their own fixtures. Run the M4 folder alone for manual testing; do not run it after the M2 rate-limit request in the same API window.
 
 Import `docs/postman/MYGARB_Backend.postman_collection.json` and `docs/postman/local.postman_environment.json` into Postman and select **MY GARB Local**. For GUI execution, point `baseUrl` at a separately configured local test API, use a fresh cookie jar, and run the collection once in order. A blank `authPassword` generates an ephemeral fictional password for the run. Do not export populated credentials, cookies or raw execution reports. GUI runs retain their fictional accounts; the automated runner cleans its own fixtures. Wait 15 minutes before repeating GUI runs after the final rate-limit test.
 
-The collection contains four M1 requests and 25 M2 requests with exact success/error assertions, cookie/logout/replay checks, descriptions and safe fictional response examples. See [Postman request guide](docs/postman/README.md) for import steps, bodies, expected statuses and administrator limitations, and [M2 test report](docs/milestones/M2-test-report.md) for actual results. No public administrator route exists; protected administrator setup and role middleware are covered separately by the integration suite. Automated Newman execution does not constitute manual browser verification.
+The collection contains four M1 requests and 25 M2 requests with exact success/error assertions, cookie/logout/replay checks, descriptions and safe fictional response examples. See [Postman request guide](docs/postman/README.md) for import steps, bodies, expected statuses and administrator limitations, and [M2 test report](docs/milestones/M2-test-report.md) for actual results. Administrator setup remains private; M6 admin routes require an active admin session. Setup, role restrictions and revocation are covered by integration tests. Automated Newman execution does not constitute manual browser verification.
 
 Safe readiness-outage demo: use a separate MongoDB process on 27018 with a new temporary directory and a separate API on 5001 configured for `mygarb_phasonable_test`. Stop only that isolated MongoDB, wait for detection, and check ready=503/live=200. Restart it for recovery. Never stop a shared development database or reset data. The normal readiness Postman assertion intentionally expects 200 and fails during this demo.
 
@@ -70,7 +70,7 @@ Run `npm ci`, `npm run lint`, `npm test`. Tests connect only to the validated is
 
 App creation, database lifecycle and startup remain in `src/app.js`, `src/config/database.js` and `src/server.js`. Authentication uses focused models, validators, services, middleware and routes. `scripts/setup-admin.js` is the explicit bootstrap entrypoint. Tests cover auth and the M1 regression; OpenAPI lives in `src/docs/openapi.json`.
 
-M4 is merged into develop at `255df969`. M5 uses `feature/milestone-05-messages-notifications` from that verified merge. Keep `.env` and `AGENTS.md` ignored/untracked. CI runs Node 24 with MongoDB 8.0 on the retained Ubuntu 22.04 runner. M5 implementation, commit/push and CI verification are authorized; PR creation/merging, main changes and M6 implementation are not. See the M5 report for actual local/CI results and limitations.
+M5 PR #6 is merged into develop at `768534ffeb6befc6e433e4a58b773d3b86d1e664`. M6 uses `feature/milestone-06-administration-handover` from that verified merge. Keep `.env` and `AGENTS.md` ignored/untracked. CI uses Node 24 and MongoDB 8.0 on Ubuntu 22.04. M6 commit/push and CI verification are authorized; PR creation/merging, main changes and frontend work are not. See the M6 report for evidence.
 
 ## M3 profiles, portfolios and measurements
 
@@ -113,7 +113,7 @@ Write security/header/cookie requirements are unchanged. Money inputs are NGN de
 
 Confirmation atomically records a durable intent on the request, then idempotently materializes an order with a unique requestId and deterministic order ID. Concurrent retries cannot create duplicates; concurrent cancellation/confirmation has one winner. If order insertion fails, 503 `CONFIRMATION_PENDING` instructs the customer to retry that same endpoint. Request detail exposes orderId/orderPending; order lists include materialized orders only. A retry after restart, lost response or elapsed proposal date recovers the original confirmed intent without resetting status/history. There is no background recovery worker or rollback of a committed intent. Submission POST itself is not idempotent and can create additional requests if repeated.
 
-Original M4 snapshots cannot be edited. M5 adds separate correction/consent records and effective production measurements as described below. No payment/paid flag, admin workflow, commercial proposal revision or post-confirmation cancellation is included.
+Original M4 snapshots cannot be edited. M5 adds separate correction/consent records and effective production measurements as described below. No payment/paid flag, commercial proposal revision or post-confirmation cancellation is included. M6 adds only metadata administration.
 
 The main [Postman collection](docs/postman/MYGARB_Backend.postman_collection.json) now contains **M4 Requests and Orders**, with fixture initialization at folder scope and per-request assertions. Preserve your edited GUI collection and M3 folder by copying only the new M4 folder/scripts from a temporary import. Use the blank [M4 environment](docs/postman/M4-manual.postman_environment.json) and [manual guide](docs/postman/M4-guide.md) to start a new API at `http://127.0.0.3:5002/api` against the test database without changing `.env`, existing APIs, accounts or cookies. **M4 manual testing is deferred by user choice.**
 
@@ -136,4 +136,12 @@ Plain text is at most 2000 characters and must be safely rendered by future clie
 
 Business changes and their event intent commit atomically with journal acknowledgement on standalone MongoDB. Polling materializes owner notifications by unique event ID before acknowledging source delivery; failure/restart retries preserve one notification and readAt. Each poll handles up to 100 events / 20 source documents per collection; continue while deliveryPending=true. A 503 NOTIFICATIONS_PENDING requires retrying the poll. No background worker or historical backfill is promised. Notification metadata includes type/linked IDs/time/readAt and omits text/measurement/contact details. Notification offset pages may shift as older pending events arrive.
 
-See the [M5 guide and request examples](docs/postman/M5-guide.md), [blank optional environment](docs/postman/M5-manual.postman_environment.json), [summary](docs/milestones/M5-summary.md), and [executed test report](docs/milestones/M5-test-report.md). Copy only the new M5 folder and scripts into an edited Postman collection. Manual repetition is deferred. The [M6 prompt](docs/milestones/M6-codex-prompt.md) is preparation only; no M6 implementation or PR action is authorized.
+See the [M5 guide and request examples](docs/postman/M5-guide.md), [blank optional environment](docs/postman/M5-manual.postman_environment.json), [summary](docs/milestones/M5-summary.md), and [executed test report](docs/milestones/M5-test-report.md). Copy only the new M5 folder and scripts into an edited Postman collection. Manual repetition is deferred. The [M6 contract](docs/milestones/M6-codex-prompt.md) records the authorized scope; PR actions remain user-managed.
+
+## M6 minimal administration and handover
+
+Active administrators can list `/api/admin/users`, `/api/admin/requests` and `/api/admin/orders` with page 1-1000 / limit 1-50 (default 20). User fields are id/name/role/status/timestamps; request/order fields are identifiers, participant identifiers and status (plus requestId for orders). Contact details, private conversations, measurement values and commercial details are omitted. Unknown filters and fields are rejected.
+
+`PATCH /api/admin/users/:id/status` accepts only `{"status":"suspended"}` or `{"status":"active"}` for customers/designers. All admin accounts are protected, including self and peers. Suspension atomically increments a persisted session version; old sessions remain invalid after reactivation, so fresh login is required. Legacy records default to version zero. No role changes, deletion, impersonation or bulk actions. Already-authorized requests may finish during concurrent suspension.
+
+No new dependency/configuration or destructive migration is required. Existing running APIs retain their loaded code; schedule their restart before relying on M6 revocation across every instance. This work preserves them. See the [M6 Postman guide](docs/postman/M6-guide.md), [blank optional environment](docs/postman/M6-manual.postman_environment.json), [demonstration guide](docs/backend-demonstration.md) and [post-M6 review prompt](docs/milestones/post-M6-review-prompt.md). There are no further defined backend milestones; frontend requires separate scope/schedule approval.
