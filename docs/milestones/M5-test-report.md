@@ -1,6 +1,6 @@
 # M5 automated test report
 
-Work began 1 November 2026; delivery verification continued 2 November 2026 (Africa/Lagos). Automated verification is the required workflow. Manual Postman repetition is **DEFERRED by user choice**, not passed. Human review is separate. M5 publication/exact-SHA CI verification is pending until recorded below.
+Work began 1 November 2026; delivery verification continued 2 November 2026 (Africa/Lagos). **M5 implementation is published and automated local/CI verification passed.** Manual Postman repetition is **DEFERRED by user choice**, not passed. Human review is separate. Final documentation-commit CI is verified in the delivery handoff.
 
 ## Baseline and preservation
 
@@ -31,4 +31,6 @@ Source events are atomically journaled with business changes; delivery happens d
 
 Dependencies and lockfile are unchanged. Fresh M5 audit matches the prior 23 development package entries (11 high, 12 moderate, zero critical), production zero. Existing Newman/ESLint tooling risks are not waived by functional success. Ubuntu 22.04 runner maintenance remains. M2 custom-account manual identity/login checks remain separately pending; automated M5 evidence does not overwrite that history.
 
-Branch: `feature/milestone-05-messages-notifications`. No PR created/modified/merged; main untouched. M6 prompt is preparation only. Exact pushed SHA/run/job evidence will be added after publication, with the final documentation SHA checked again.
+Branch: `feature/milestone-05-messages-notifications`. Implementation commit **`4a6ca348d1fda6bc004fd48900401527a43e66b6`** is pushed. Exact-implementation-SHA [CI 41392856922](https://github.com/ikhaliddevs/my-garb-backend/actions/runs/41392856922), job **125107816205**, succeeded on 2 November 2026. Ubuntu 22.04 / Node 24 / MongoDB 8.0: clean install and lint passed; **66 tests passed, 0 failed, 0 skipped (29.742s)**. Downloaded job logs confirm Newman **29/94 + 22/51 + 55/125 + 52/117 = 158 requests / 387 assertions**, with zero failures. This includes the POSIX test skipped on Windows.
+
+GitHub read-only checks confirm no M5 PR exists, develop remains the verified M4 merge, and main is unchanged. No PR created/modified/merged; M6 prompt is preparation only. This final documentation update reuses the valid passing local evidence and changes no application/dependency/test files. Its own pushed SHA receives a fresh CI check, recorded in the final handoff and ignored local progress notes to avoid self-referential commit metadata. The [copyable PR draft](M5-pr-draft.md) is text only for user-managed review/integration.
