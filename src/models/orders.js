@@ -1,3 +1,4 @@
+const { communicationSchemas } = require('./communication');
 function createOrderModels(client) {
   const { Schema } = client;
   // Acknowledged workflow writes must reach the standalone server's journal.
@@ -16,6 +17,7 @@ function createOrderModels(client) {
   const money = () => ({ type: Number, min: 1, max: 10000000000, required: true, validate: Number.isSafeInteger });
   const proposal = new Schema({ priceKobo: money(), completionDate: { type: String, required: true } }, { _id: false });
   const requestSchema = new Schema({
+    ...communicationSchemas(Schema),
     customerId: identifier(), designerId: identifier(), ...outfit(),
     desiredCompletionDate: { type: String, required: true }, budgetKobo: money(),
     measurementSnapshot: { type: snapshot, required: true, immutable: true },
@@ -25,6 +27,15 @@ function createOrderModels(client) {
     confirmedAt: Date, confirmedBy: Schema.Types.ObjectId,
   }, options);
   const orderSchema = new Schema({
+    ...communicationSchemas(Schema),
+    amendmentVersion: { type: Number, default: 0 },
+    pendingAmendment: { type: Number, default: null },
+    amendments: { type: [new Schema({
+      version: { type: Number, required: true }, snapshot: { type: snapshot, required: true },
+      designerId: identifier(), customerId: identifier(), proposedAt: { type: Date, required: true },
+      proposalMessageId: identifier(), consentMessageId: Schema.Types.ObjectId,
+      acceptedAt: Date, withdrawnAt: Date, supersededAt: Date,
+    }, { _id: false })], default: [] },
     requestId: { ...identifier(), unique: true }, customerId: identifier(), designerId: identifier(), ...outfit(),
     priceKobo: money(), completionDate: { type: String, required: true },
     measurementSnapshot: { type: snapshot, required: true, immutable: true },
@@ -32,6 +43,7 @@ function createOrderModels(client) {
     history: { type: [new Schema({ status: { type: String, enum: ['confirmed', 'in_progress', 'ready', 'completed'], required: true }, actorId: identifier(), at: { type: Date, required: true } }, { _id: false })], validate: v => v.length >= 1 && v.length <= 4 },
   }, options);
   for (const schema of [requestSchema, orderSchema]) {
+    schema.index({ 'events.recipientId': 1, 'events.delivered': 1 });
     schema.index({ customerId: 1, _id: 1 }); schema.index({ designerId: 1, _id: 1 });
     schema.index({ customerId: 1, status: 1, _id: 1 }); schema.index({ designerId: 1, status: 1, _id: 1 });
   }

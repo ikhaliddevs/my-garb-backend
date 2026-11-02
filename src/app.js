@@ -1,4 +1,5 @@
 const express = require('express');
+const { communicationRoutes } = require('./routes/communication');
 const helmet = require('helmet');
 const cors = require('cors');
 const { rateLimit } = require('express-rate-limit');
@@ -34,6 +35,7 @@ function createApp({ config, database, logger = console, rateLimitMax = 100, aut
   app.use('/api/auth', authRoutes({ config, database, authRateLimitMax }));
   app.use('/api', profileRoutes({ config, database }));
   app.use('/api', orderRoutes({ config, database }));
+  app.use('/api', communicationRoutes({ config, database }));
   app.use('/api/health', healthRoutes(database));
   app.get('/api/docs.json', (req, res) => res.json(specification));
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(specification));

@@ -1,10 +1,11 @@
 const mongoose = require('mongoose');
 const { createAuthModels } = require('../models/auth');
 const { createOrderModels } = require('../models/orders');
+const { createCommunicationModels } = require('../models/communication');
 
 function createDatabase() {
   const client = new mongoose.Mongoose();
-  const models = { ...createAuthModels(client), ...createOrderModels(client) };
+  const models = { ...createAuthModels(client), ...createOrderModels(client), ...createCommunicationModels(client) };
   return {
     models,
     prepareAuth: async () => {
@@ -12,6 +13,7 @@ function createDatabase() {
       await models.Session.createIndexes();
       await models.Request.createIndexes();
       await models.Order.createIndexes();
+      await models.Notification.createIndexes();
     },
     isReady: () => client.connection.readyState === 1,
     async connect(uri) {

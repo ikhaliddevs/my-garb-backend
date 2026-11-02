@@ -6001,6 +6001,2056 @@
           ]
         }
       ]
+    },
+    {
+      "name": "M5 Conversations and Notifications",
+      "description": "Run independently with isolated fictional fixtures. Automated verification is the default; manual repetition is deferred. Preserve this folder script when copying into an edited collection.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.environment.get('m5Initialized')) {",
+              "const suffix = pm.variables.replaceIn('{{$guid}}').replace(/-/g, '');",
+              "if (pm.environment.get('fixtureMode') !== 'runner') {",
+              "for (const role of ['Customer','Designer','Other']) pm.environment.set('m5' + role + 'Email', 'm5-' + role.toLowerCase() + '-' + suffix + '@example.test');",
+              "pm.environment.set('m5AuthPassword', pm.variables.replaceIn('{{$guid}}') + 'aA9!');",
+              "}",
+              "pm.environment.set('m5Date', new Date(Date.now() + 30 * 86400000).toISOString().slice(0,10));",
+              "pm.environment.set('m5Initialized', 'true');",
+              "}"
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "Unauthenticated notifications",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/notifications",
+            "header": [],
+            "description": "Unauthenticated notifications. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register M5 customer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/register",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Register M5 customer. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sample M5 customer\",\n  \"email\": \"{{m5CustomerEmail}}\",\n  \"password\": \"{{m5AuthPassword}}\",\n  \"role\": \"customer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.environment.set('m5CustomerId', body.data.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register M5 designer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/register",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Register M5 designer. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sample M5 designer\",\n  \"email\": \"{{m5DesignerEmail}}\",\n  \"password\": \"{{m5AuthPassword}}\",\n  \"role\": \"designer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.environment.set('m5DesignerId', body.data.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register M5 other",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/register",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Register M5 other. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sample M5 other\",\n  \"email\": \"{{m5OtherEmail}}\",\n  \"password\": \"{{m5AuthPassword}}\",\n  \"role\": \"customer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.environment.set('m5OtherId', body.data.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login M5 designer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Login M5 designer. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{m5DesignerEmail}}\",\n  \"password\": \"{{m5AuthPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prepare M5 designer profile",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/profile",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Prepare M5 designer profile. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessName\": \"M5 Sample Studio\",\n  \"location\": \"Sample City\",\n  \"specialties\": [\n    \"Formal\"\n  ],\n  \"available\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prepare M5 designer portfolio",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/portfolio",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Prepare M5 designer portfolio. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Sample\",\n  \"category\": \"Formal\",\n  \"imageUrl\": \"https://example.com/sample.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout M5 participant",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Logout M5 participant. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login M5 customer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Login M5 customer. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{m5CustomerEmail}}\",\n  \"password\": \"{{m5AuthPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Save M5 private measurements",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/measurements",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Save M5 private measurements. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unit\": \"cm\",\n  \"values\": [\n    {\n      \"label\": \"Chest\",\n      \"value\": 90\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Submit M5 request",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/requests",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Submit M5 request. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designerId\": \"{{m5DesignerId}}\",\n  \"outfitType\": \"Sample outfit\",\n  \"description\": \"Fictional M5 request\",\n  \"quantity\": 1,\n  \"desiredCompletionDate\": \"{{m5Date}}\",\n  \"budgetAmount\": \"25000.00\",\n  \"shareMeasurements\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.environment.set('m5RequestId', body.data.request.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Send request-phase text",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/requests/{{m5RequestId}}/messages",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Send request-phase text. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Please review my request.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Actor and time', () => { pm.expect(body.data.message.actorId).to.eql(pm.environment.get('m5CustomerId')); pm.expect(body.data.message.at).to.be.a('string'); });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject empty message",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/requests/{{m5RequestId}}/messages",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject empty message. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject forged sender",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/requests/{{m5RequestId}}/messages",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject forged sender. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Hello\",\n  \"actorId\": \"{{m5DesignerId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Submit terminal request",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/requests",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Submit terminal request. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designerId\": \"{{m5DesignerId}}\",\n  \"outfitType\": \"Sample outfit\",\n  \"description\": \"Fictional M5 request\",\n  \"quantity\": 1,\n  \"desiredCompletionDate\": \"{{m5Date}}\",\n  \"budgetAmount\": \"25000.00\",\n  \"shareMeasurements\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.environment.set('m5ClosedId', body.data.request.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel terminal request",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/requests/{{m5ClosedId}}/cancel",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Cancel terminal request. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject message after cancellation",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/requests/{{m5ClosedId}}/messages",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject message after cancellation. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Closed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout M5 participant",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Logout M5 participant. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login M5 designer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Login M5 designer. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{m5DesignerEmail}}\",\n  \"password\": \"{{m5AuthPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Poll designer new request notifications",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/notifications",
+            "header": [],
+            "description": "Poll designer new request notifications. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('New request delivered', () => pm.expect(body.data.notifications.some(n => n.type === 'new_request' && n.requestId === pm.environment.get('m5RequestId'))).to.eql(true));",
+                  "pm.environment.set('m5NotificationId', body.data.notifications[0].id);",
+                  "pm.test('Safe notification metadata', () => body.data.notifications.forEach(n => { pm.expect(n).not.to.have.property('text'); pm.expect(n).not.to.have.property('measurements'); }));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mark own notification read",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/notifications/{{m5NotificationId}}/read",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Mark own notification read. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.environment.set('m5ReadAt', body.data.notification.readAt);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Retry marking read",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/notifications/{{m5NotificationId}}/read",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Retry marking read. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('First timestamp retained', () => pm.expect(body.data.notification.readAt).to.eql(pm.environment.get('m5ReadAt')));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Accept M5 request",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/requests/{{m5RequestId}}/decision",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Accept M5 request. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"accepted\",\n  \"responseText\": \"Agreed sample terms.\",\n  \"priceAmount\": \"25000.00\",\n  \"completionDate\": \"{{m5Date}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout M5 participant",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Logout M5 participant. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login M5 customer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Login M5 customer. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{m5CustomerEmail}}\",\n  \"password\": \"{{m5AuthPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Poll customer acceptance",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/notifications",
+            "header": [],
+            "description": "Poll customer acceptance. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Accepted notice', () => pm.expect(body.data.notifications.some(n => n.type === 'accepted')).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject foreign notification read",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/notifications/{{m5NotificationId}}/read",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject foreign notification read. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Confirm M5 order",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/requests/{{m5RequestId}}/confirm",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Confirm M5 order. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Read linked conversation",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/requests/{{m5RequestId}}/messages",
+            "header": [],
+            "description": "Read linked conversation. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Order linked, earlier message retained', () => { pm.expect(body.data.orderId).to.eql(pm.environment.get('m5RequestId')); pm.expect(body.data.messages).to.have.lengthOf(1); });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject customer proposing measurements",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/orders/{{m5RequestId}}/amendments",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject customer proposing measurements. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expectedVersion\": 0,\n  \"unit\": \"cm\",\n  \"values\": [\n    {\n      \"label\": \"Chest\",\n      \"value\": 95\n    }\n  ],\n  \"explanation\": \"Please review the corrected full set.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout M5 participant",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Logout M5 participant. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login M5 designer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Login M5 designer. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{m5DesignerEmail}}\",\n  \"password\": \"{{m5AuthPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Record correction proposal version 1",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/orders/{{m5RequestId}}/amendments",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Record correction proposal version 1. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expectedVersion\": 0,\n  \"unit\": \"cm\",\n  \"values\": [\n    {\n      \"label\": \"Chest\",\n      \"value\": 95\n    }\n  ],\n  \"explanation\": \"Please review the corrected full set.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Version 1 with proposal message', () => { pm.expect(body.data.amendment.version).to.eql(1); pm.expect(body.data.amendment.proposalMessageId).to.be.a('string'); });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject designer self-consent",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{m5RequestId}}/amendments/accept",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject designer self-consent. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"version\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Block production while pending",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{m5RequestId}}/status",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Block production while pending. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Supersede pending proposal with version 2",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/orders/{{m5RequestId}}/amendments",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Supersede pending proposal with version 2. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expectedVersion\": 1,\n  \"unit\": \"cm\",\n  \"values\": [\n    {\n      \"label\": \"Chest\",\n      \"value\": 96\n    }\n  ],\n  \"explanation\": \"Please review the corrected full set.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject stale proposal submission",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/orders/{{m5RequestId}}/amendments",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject stale proposal submission. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expectedVersion\": 1,\n  \"unit\": \"cm\",\n  \"values\": [\n    {\n      \"label\": \"Chest\",\n      \"value\": 97\n    }\n  ],\n  \"explanation\": \"Please review the corrected full set.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout M5 participant",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Logout M5 participant. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login M5 customer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Login M5 customer. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{m5CustomerEmail}}\",\n  \"password\": \"{{m5AuthPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject stale customer consent",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{m5RequestId}}/amendments/accept",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Reject stale customer consent. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"version\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Send arbitrary chat without consent",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/requests/{{m5RequestId}}/messages",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Send arbitrary chat without consent. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"I agree\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify chat did not change effective measurements",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/{{m5RequestId}}/amendments",
+            "header": [],
+            "description": "Verify chat did not change effective measurements. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Original remains effective until explicit acceptance', () => { pm.expect(body.data.effectiveMeasurements.values[0].value).to.eql(90); pm.expect(body.data.pendingVersion).to.eql(2); });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Accept exact version 2",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{m5RequestId}}/amendments/accept",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Accept exact version 2. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"version\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.environment.set('m5ConsentId', body.data.amendment.consentMessageId);",
+                  "pm.test('Exact values agreed', () => pm.expect(body.data.amendment.measurements.values[0].value).to.eql(96));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Retry consent without duplicate message",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/orders/{{m5RequestId}}/amendments/accept",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Retry consent without duplicate message. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"version\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Same consent record', () => pm.expect(body.data.amendment.consentMessageId).to.eql(pm.environment.get('m5ConsentId')));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify original and effective measurements",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/{{m5RequestId}}",
+            "header": [],
+            "description": "Verify original and effective measurements. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Immutable original and agreed effective set', () => { pm.expect(body.data.order.measurementSnapshot.values[0].value).to.eql(90); pm.expect(body.data.order.effectiveMeasurements.values[0].value).to.eql(96); });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Read paginated conversation",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/requests/{{m5RequestId}}/messages?limit=1&page=2",
+            "header": [],
+            "description": "Read paginated conversation. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Pagination and proposal message', () => { pm.expect(body.data.messages).to.have.lengthOf(1); pm.expect(body.data.hasMore).to.eql(true); pm.expect(body.data.messages[0].kind).to.eql('proposal'); });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout M5 participant",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Logout M5 participant. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login M5 other",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Login M5 other. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{m5OtherEmail}}\",\n  \"password\": \"{{m5AuthPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject unrelated conversation read",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/requests/{{m5RequestId}}/messages",
+            "header": [],
+            "description": "Reject unrelated conversation read. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject unrelated amendment read",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/{{m5RequestId}}/amendments",
+            "header": [],
+            "description": "Reject unrelated amendment read. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unrelated account sees no notifications",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/notifications",
+            "header": [],
+            "description": "Unrelated account sees no notifications. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "pm.test('Owner isolation', () => pm.expect(body.data.notifications).to.have.lengthOf(0));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout M5 participant",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-MYGARB-Request",
+                "value": "1"
+              }
+            ],
+            "description": "Logout M5 participant. Isolated fictional M5 fixtures; run this folder independently. Plain text must be safely rendered by clients.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Envelope', () => pm.expect(body.success).to.eql(true));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -1,6 +1,8 @@
 const { HttpError } = require('../middleware/errors');
 const { measurements } = require('../validators/profile');
 const { today } = require('../validators/orders');
+const { Types } = require('mongoose');
+const { event } = require('./events');
 const missing = () => { throw new HttpError(404, 'NOT_FOUND', 'Record not found'); };
 const conflict = () => { throw new HttpError(409, 'INVALID_TRANSITION', 'Record cannot make this transition'); };
 const amount = kobo => `${Math.floor(kobo / 100)}.${String(kobo % 100).padStart(2, '0')}`;
@@ -22,7 +24,10 @@ function orderView(record, detail = true) {
     status: record.status, outfitType: record.outfitType, quantity: record.quantity, priceAmount: amount(record.priceKobo), currency: 'NGN',
     completionDate: record.completionDate, createdAt: record.createdAt, updatedAt: record.updatedAt };
   if (detail) Object.assign(result, { description: record.description, referenceImageUrls: record.referenceImageUrls,
-    measurementSnapshot: snapshotView(record.measurementSnapshot), history: record.history.map(event => ({ status: event.status, actorId: String(event.actorId), at: event.at })) });
+    measurementSnapshot: snapshotView(record.measurementSnapshot),
+    effectiveMeasurements: snapshotView([...(record.amendments || [])].reverse().find(a => a.acceptedAt)?.snapshot || record.measurementSnapshot),
+    amendmentVersion: record.amendmentVersion || 0, pendingAmendment: record.pendingAmendment || null,
+    history: record.history.map(event => ({ status: event.status, actorId: String(event.actorId), at: event.at })) });
   return result;
 }
 function createOrderService({ User, Request, Order } = {}) {
@@ -59,12 +64,14 @@ function createOrderService({ User, Request, Order } = {}) {
       if (!owner) throw new HttpError(401, 'UNAUTHENTICATED', 'Authentication required');
       if (!owner.measurements?.values?.length) throw new HttpError(409, 'MEASUREMENTS_REQUIRED', 'Save a nonempty measurement set before sharing');
       const validated = measurements({ unit: owner.measurements.unit, values: owner.measurements.values });
-      const record = await Request.create({ ...input, customerId: user.id, measurementSnapshot: { ...validated, capturedAt: new Date() } });
+      const requestId = new Types.ObjectId();
+      const record = await Request.create({ _id: requestId, ...input, customerId: user.id, measurementSnapshot: { ...validated, capturedAt: new Date() },
+        events: [event('new_request', input.designerId, requestId)] });
       return requestView(record.toObject());
     },
     async list(user, input, orders = false) {
       const filter = { ...participant(user), ...(input.status ? { status: input.status } : {}) };
-      const records = await (orders ? Order : Request).find(filter).select('-measurementSnapshot -description -referenceImageUrls -responseText -history')
+      const records = await (orders ? Order : Request).find(filter).select('-measurementSnapshot -description -referenceImageUrls -responseText -history -messages -events -amendments')
         .sort({ _id: 1 }).skip((input.page - 1) * input.limit).limit(input.limit + 1).maxTimeMS(3000).lean();
       return { [orders ? 'orders' : 'requests']: records.slice(0, input.limit).map(r => orders ? orderView(r, false) : requestView(r, false)),
         page: input.page, limit: input.limit, hasMore: records.length > input.limit };
@@ -77,9 +84,9 @@ function createOrderService({ User, Request, Order } = {}) {
       return result;
     },
     async decide(user, id, input) {
-      await getRecord(Request, id, user);
+      const current = await getRecord(Request, id, user);
       const record = await Request.findOneAndUpdate({ _id: id, designerId: user.id, status: 'submitted' },
-        { $set: { ...input, decidedAt: new Date(), decidedBy: user.id } }, { returnDocument: 'after', runValidators: true }).lean();
+        { $set: { ...input, decidedAt: new Date(), decidedBy: user.id }, $push: { events: event(input.status, current.customerId, id) } }, { returnDocument: 'after', runValidators: true }).lean();
       if (!record) conflict();
       return requestView(record);
     },
@@ -96,7 +103,7 @@ function createOrderService({ User, Request, Order } = {}) {
         if (record.status !== 'accepted') conflict();
         if (!await User.exists({ _id: record.designerId, role: 'designer', status: 'active' })) throw new HttpError(409, 'DESIGNER_UNAVAILABLE', 'Designer is not active');
         record = await Request.findOneAndUpdate({ _id: id, customerId: user.id, status: 'accepted', 'proposal.completionDate': { $gt: today() } },
-          { $set: { status: 'confirmed', confirmedAt: new Date(), confirmedBy: user.id } }, { returnDocument: 'after', runValidators: true }).lean();
+          { $set: { status: 'confirmed', confirmedAt: new Date(), confirmedBy: user.id }, $push: { events: event('confirmed', record.designerId, id, id) } }, { returnDocument: 'after', runValidators: true }).lean();
         if (!record) record = await getRecord(Request, id, user);
         if (record.status !== 'confirmed') conflict();
       }
@@ -109,8 +116,10 @@ function createOrderService({ User, Request, Order } = {}) {
       const current = await getRecord(Order, id, user);
       if (current.status === status) return orderView(current);
       const previous = { in_progress: 'confirmed', ready: 'in_progress', completed: 'ready' }[status];
-      const record = await Order.findOneAndUpdate({ _id: id, ...participant(user), status: previous },
-        { $set: { status }, $push: { history: { status, actorId: user.id, at: new Date() } } }, { returnDocument: 'after', runValidators: true }).lean();
+      const record = await Order.findOneAndUpdate({ _id: id, ...participant(user), status: previous,
+        ...(status === 'in_progress' ? { pendingAmendment: null } : {}) },
+        { $set: { status }, $push: { history: { status, actorId: user.id, at: new Date() },
+          events: event('order_' + status, user.role === 'customer' ? current.designerId : current.customerId, current.requestId, id) } }, { returnDocument: 'after', runValidators: true }).lean();
       if (record) return orderView(record);
       const latest = await getRecord(Order, id, user);
       if (latest.status === status) return orderView(latest);
