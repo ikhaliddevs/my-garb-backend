@@ -9,12 +9,14 @@ function createAuthModels(client) {
     passwordHash: { type: String, required: true, select: false },
     role: { type: String, enum: ['customer', 'designer', 'admin'], required: true },
     status: { type: String, enum: ['active', 'suspended'], default: 'active', required: true },
+    sessionVersion: { type: Number, default: 0 },
     ...profileFields(Schema),
   }, options);
   userSchema.index({ role: 1, status: 1, 'designer.available': 1, _id: 1 });
   userSchema.index({ role: 1, status: 1, 'designer.location': 1, _id: 1 });
   const sessionSchema = new Schema({
     tokenHash: { type: String, required: true, unique: true },
+    sessionVersion: { type: Number, default: 0 },
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     expiresAt: { type: Date, required: true, expires: 0 },
   }, options);

@@ -9,7 +9,7 @@ npm.cmd run test:postman
 
 On other shells, `npm` works in place of `npm.cmd`. Newman is pinned as a development dependency in the lockfile. No Postman login, API key, external server, or cloud publication is used.
 
-The runner starts the actual `createApp` on a free loopback port, with normal middleware, real MongoDB models, and unchanged default rate limits. It verifies the served OpenAPI title, version 0.5.0 and notifications path before running the collection. It does not load or modify `.env`, or use an existing development API. Database lifecycle is explicit; importing the runner does not start it. `TEST_MONGODB_URI` optionally selects a local port, but must match `mongodb://localhost:<port>/mygarb_phasonable_test` or the `127.0.0.1` equivalent exactly. Credentials, query strings, remote hosts and other databases are rejected before connecting.
+The runner starts the actual `createApp` on a free loopback port, with normal middleware, real MongoDB models, and unchanged default rate limits. It verifies the served OpenAPI title, version 0.6.0 and admin users path before running the collection. It does not load or modify `.env`, or use an existing development API. Database lifecycle is explicit; importing the runner does not start it. `TEST_MONGODB_URI` optionally selects a local port, but must match `mongodb://localhost:<port>/mygarb_phasonable_test` or the `127.0.0.1` equivalent exactly. Credentials, query strings, remote hosts and other databases are rejected before connecting.
 
 Each run uses unique fictional customer/designer emails, a random password and signing key, and Newman's fresh default in-memory cookie jar. Cleanup selects only the two exact generated emails, removes sessions belonging to those users, then removes those users. No database is dropped or reset. The server and connection close after the run. A forced process kill can leave only that run's fixtures behind; no broad cleanup is attempted. Each invocation gets a fresh server rate-limit budget.
 
@@ -69,3 +69,7 @@ The existing main collection now also contains **M4 Requests and Orders** (55 re
 ## M5 automated verification
 
 The runner now executes M1/M2, M3, M4 and M5 separately with fresh APIs/cookie jars and owned fixtures. M5 contains 52 requests / 117 assertions in the main collection. Cleanup also removes only run-owned notifications. See [M5 setup and examples](M5-guide.md), [blank optional environment](M5-manual.postman_environment.json), and [actual M5 results](../milestones/M5-test-report.md). Preserve your edited collections by copying only the M5 folder and its scripts. Full manual repetition is deferred by user choice.
+
+## M6 administration
+
+The main collection includes **M6 Administration** (20 requests/43 assertions). See the [M6 guide](M6-guide.md) and [blank optional environment](M6-manual.postman_environment.json). The automated runner creates/cleans only isolated fictional admin/customer fixtures. Preserve edited GUI collections by copying only the new folder from a temporary import. Manual repetition remains deferred.
