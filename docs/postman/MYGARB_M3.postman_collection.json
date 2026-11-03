@@ -56,11 +56,10 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "{",
-              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
-              "const data = pm.response.json();",
-              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
-              "}"
+              "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+              "pm.test('HTTP 202', () => pm.response.to.have.status(202));",
+              "pm.test('Generic verification response without address disclosure', () => pm.expect(pm.response.json()).to.eql({\"success\":true,\"data\":{\"message\":\"If this address is eligible, check it for a verification code. Delivery is not confirmed; request a resend if no code arrives.\"}}));",
+              "pm.test('Registration issues no session', () => pm.expect(pm.response.headers.has('Set-Cookie')).to.eql(false));"
             ]
           }
         }
@@ -92,15 +91,15 @@
               }
             }
           },
-          "status": "Success",
-          "code": 201,
+          "status": "Accepted",
+          "code": 202,
           "header": [
             {
               "key": "Content-Type",
               "value": "application/json"
             }
           ],
-          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000001\",\n      \"name\": \"Sample Customer\",\n      \"email\": \"customer@example.test\",\n      \"role\": \"customer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"If this address is eligible, check it for a verification code. Delivery is not confirmed; request a resend if no code arrives.\"\n  }\n}"
         }
       ]
     },
@@ -136,12 +135,10 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "{",
-              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
-              "const data = pm.response.json();",
-              "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
-              "pm.environment.set('m3DesignerId', data.data.user.id);",
-              "}"
+              "pm.test('JSON and no-store', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+              "pm.test('HTTP 202', () => pm.response.to.have.status(202));",
+              "pm.test('Generic verification response without address disclosure', () => pm.expect(pm.response.json()).to.eql({\"success\":true,\"data\":{\"message\":\"If this address is eligible, check it for a verification code. Delivery is not confirmed; request a resend if no code arrives.\"}}));",
+              "pm.test('Registration issues no session', () => pm.expect(pm.response.headers.has('Set-Cookie')).to.eql(false));"
             ]
           }
         }
@@ -173,15 +170,15 @@
               }
             }
           },
-          "status": "Success",
-          "code": 201,
+          "status": "Accepted",
+          "code": 202,
           "header": [
             {
               "key": "Content-Type",
               "value": "application/json"
             }
           ],
-          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"000000000000000000000001\",\n      \"name\": \"Sample Designer\",\n      \"email\": \"designer@example.test\",\n      \"role\": \"designer\",\n      \"status\": \"active\"\n    }\n  }\n}"
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"If this address is eligible, check it for a verification code. Delivery is not confirmed; request a resend if no code arrives.\"\n  }\n}"
         }
       ]
     },
@@ -221,7 +218,8 @@
               "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
               "const data = pm.response.json();",
               "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
-              "}"
+              "}",
+              "if (pm.response.code === 200) pm.environment.set('m3CustomerId', pm.response.json().data.user.id);"
             ]
           }
         }
@@ -873,7 +871,8 @@
               "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
               "const data = pm.response.json();",
               "pm.test('Envelope', () => pm.expect(data.success).to.eql(true));",
-              "}"
+              "}",
+              "if (pm.response.code === 200) pm.environment.set('m3DesignerId', pm.response.json().data.user.id);"
             ]
           }
         }

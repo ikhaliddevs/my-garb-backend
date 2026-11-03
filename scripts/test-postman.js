@@ -18,20 +18,36 @@ async function main({ m3 = false, m4 = false, m5 = false, m6 = false } = {}) {
   const emails = (m6 ? ['customer', 'admin'] : m4 || m5 ? ['customer', 'designer', 'other'] : ['customer', 'designer']).map(role => `${role}-${suffix}@example.test`);
   const m6Password = randomBytes(24).toString('hex');
   const config = { nodeEnv: 'test', mongoUri: uri, origins: ['http://localhost:3000'], jwtSecret: randomBytes(32).toString('hex'), sessionTtlSeconds: 3600 };
+  let baseUrl, verifiedCodes = 0;
+  const emailProvider = {
+    async sendVerificationCode({ to, otp }) {
+      if (!baseUrl) throw new Error('Test mailbox is unavailable');
+      const response = await fetch(`${baseUrl}/auth/verify-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-MYGARB-Request': '1' },
+        body: JSON.stringify({ email: to, otp }),
+      });
+      if (!response.ok) throw new Error('Test mailbox verification failed');
+      verifiedCodes += 1;
+    },
+  };
   let server;
   try {
     await database.connect(uri);
     await database.prepareAuth();
+    server = createApp({
+      config, database, logger: { info() {}, warn() {} }, emailProvider,
+      registrationRateLimitMax: 10,
+    }).listen(0, '127.0.0.1');
+    await once(server, 'listening');
+    baseUrl = `http://127.0.0.1:${server.address().port}/api`;
     if (m6) {
-      const auth = createAuthService({ models: database.models, config });
+      const auth = createAuthService({ models: database.models, config, emailProvider });
       for (const [index, role] of ['customer', 'admin'].entries()) await auth.register({ name: 'M6 fictional runner fixture', email: emails[index], password: m6Password, role });
     }
-    server = createApp({ config, database, logger: { info() {} } }).listen(0, '127.0.0.1');
-    await once(server, 'listening');
-    const baseUrl = `http://127.0.0.1:${server.address().port}/api`;
     const spec = await fetch(`${baseUrl}/docs.json`).then(response => response.json());
-    if (spec.info.title !== 'MY GARB PHASONABLE Backend' || spec.info.version !== '0.6.0' || !spec.paths['/api/admin/users']) throw new Error('Unexpected API contract');
-    console.info(`Verified local MY GARB API 0.6.0; ${m6 ? 'M6' : m5 ? 'M5' : m4 ? 'M4' : m3 ? 'M3' : 'M1/M2'} collection; isolated test database and fresh in-memory Newman cookie jar.`);
+    if (spec.info.title !== 'MY GARB PHASONABLE Backend' || spec.info.version !== '0.7.0' || !spec.paths['/api/admin/users']) throw new Error('Unexpected API contract');
+    console.info(`Verified local MY GARB API 0.7.0; ${m6 ? 'M6' : m5 ? 'M5' : m4 ? 'M4' : m3 ? 'M3' : 'M1/M2'} collection; isolated test database and fresh in-memory Newman cookie jar.`);
     const values = { baseUrl, customerEmail: emails[0], designerEmail: emails[1], authPassword: randomBytes(24).toString('hex'), fixtureMode: 'runner',
       ...(m6 ? { m6CustomerEmail: emails[0], m6AdminEmail: emails[1], m6Password } : {}),
       ...(m4 ? { m4CustomerEmail: emails[0], m4DesignerEmail: emails[1], m4OtherEmail: emails[2], m4AuthPassword: randomBytes(24).toString('hex') } : {}),
@@ -51,6 +67,7 @@ async function main({ m3 = false, m4 = false, m5 = false, m6 = false } = {}) {
       console.info(`${key}: ${stat.total} total, ${stat.failed} failed`);
     }
     console.info(`Runner failures: ${summary.run.failures.length}`);
+    console.info(`OTP verification endpoint calls through test-only mailbox: ${verifiedCodes}`);
     if (summary.run.failures.length) process.exitCode = 1;
   } finally {
     if (server) await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));

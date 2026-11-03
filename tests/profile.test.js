@@ -26,7 +26,7 @@ function call(method, path, user, body, target = app) {
 async function account(role) {
   const email = `m3-${ids.length}-${suffix}@example.test`;
   // Fixtures are isolated and tracked by ID; create an admin only inside this guarded test DB.
-  const user = await database.models.User.create({ name: `Sample ${role}`, email, role, passwordHash: await require('bcrypt').hash('Fixture-only-123!', 12) });
+  const user = await database.models.User.create({ name: `Sample ${role}`, email, role, emailVerified: true, passwordHash: await require('bcrypt').hash('Fixture-only-123!', 12) });
   ids.push(user._id);
   const login = await createAuthService({ config, models: database.models }).login({ email, password: 'Fixture-only-123!' });
   return { id: String(user._id), cookie: `mygarb_session=${login.token}` };

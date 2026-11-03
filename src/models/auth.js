@@ -9,6 +9,17 @@ function createAuthModels(client) {
     passwordHash: { type: String, required: true, select: false },
     role: { type: String, enum: ['customer', 'designer', 'admin'], required: true },
     status: { type: String, enum: ['active', 'suspended'], default: 'active', required: true },
+    emailVerified: { type: Boolean, default: false, required: true },
+    emailVerifiedAt: { type: Date, default: null },
+    emailVerification: {
+      challengeId: { type: String, select: false },
+      otpHash: { type: String, select: false },
+      expiresAt: { type: Date, select: false },
+      attempts: { type: Number, default: 0, select: false },
+      sentAt: { type: Date, select: false },
+      windowStartedAt: { type: Date, select: false },
+      sendCount: { type: Number, default: 0, select: false },
+    },
     sessionVersion: { type: Number, default: 0 },
     ...profileFields(Schema),
   }, options);

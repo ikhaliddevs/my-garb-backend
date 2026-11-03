@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { randomBytes, createHash } = require('node:crypto');
 const { HttpError } = require('../middleware/errors');
+const { createEmailVerificationService } = require('./emailVerification');
 
 const ISSUER = 'my-garb-backend';
 const AUDIENCE = 'my-garb-session';
@@ -16,21 +17,23 @@ function getDummyHash() {
   return dummyHash;
 }
 
-function createAuthService({ models, config }) {
+function createAuthService({ models, config, emailProvider = { async sendVerificationCode() { throw new Error('Email provider is not configured'); } }, logger = console, otpGenerator, now }) {
+  const verification = createEmailVerificationService({ models, config, emailProvider, logger, otpGenerator, now });
   async function register(input) {
     const passwordHash = await bcrypt.hash(input.password, COST);
     try {
       const user = await models.User.create({ name: input.name, email: input.email, role: input.role, passwordHash });
-      return safeUser(user);
+      const deliveryAccepted = await verification.startForUser(user);
+      return { created: true, deliveryAccepted };
     } catch (error) {
-      if (error.code === 11000) throw new HttpError(409, 'REGISTRATION_CONFLICT', 'Unable to register with these details');
+      if (error.code === 11000) return { created: false, deliveryAccepted: false };
       throw error;
     }
   }
   async function login(input) {
     const user = await models.User.findOne({ email: input.email }).select('+passwordHash');
     const matches = await bcrypt.compare(input.password, user ? user.passwordHash : await getDummyHash());
-    if (!matches || !user || user.status !== 'active') throw new HttpError(401, 'INVALID_CREDENTIALS', 'Invalid email or password');
+    if (!matches || !user || user.status !== 'active' || user.emailVerified !== true) throw new HttpError(401, 'INVALID_CREDENTIALS', 'Invalid email or password');
     const jti = randomBytes(32).toString('hex');
     const now = Math.floor(Date.now() / 1000);
     const exp = now + config.sessionTtlSeconds;
@@ -48,13 +51,20 @@ function createAuthService({ models, config }) {
     const session = await models.Session.findOne({ tokenHash: digest(claims.jti), userId: claims.sub, expiresAt: { $gt: new Date() } });
     if (!session) throw unauthenticated();
     const user = await models.User.findById(claims.sub);
-    if (!user || user.status !== 'active' || (session.sessionVersion || 0) !== (user.sessionVersion || 0)) throw unauthenticated();
+    if (!user || user.status !== 'active' || user.emailVerified !== true || (session.sessionVersion || 0) !== (user.sessionVersion || 0)) throw unauthenticated();
     return { user: safeUser(user), sessionId: session._id };
   }
   async function logout(sessionId) {
     await models.Session.deleteOne({ _id: sessionId });
   }
-  return { register, login, authenticate, logout };
+  return {
+    register,
+    login,
+    authenticate,
+    logout,
+    verifyEmail: verification.verify,
+    resendVerification: verification.resend,
+  };
 }
 
 module.exports = { createAuthService, safeUser, COST };

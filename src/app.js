@@ -13,7 +13,7 @@ const { authRoutes } = require('./routes/auth');
 const { profileRoutes } = require('./routes/profile');
 const { orderRoutes } = require('./routes/orders');
 
-function createApp({ config, database, logger = console, rateLimitMax = 100, authRateLimitMax = 10 }) {
+function createApp({ config, database, logger = console, emailProvider, rateLimitMax = 100, authRateLimitMax = 10, registrationRateLimitMax = 5, verificationRateLimitMax = 15 }) {
   const app = express();
   app.disable('x-powered-by');
   app.use(helmet());
@@ -33,7 +33,7 @@ function createApp({ config, database, logger = console, rateLimitMax = 100, aut
   }));
   app.use(express.json({ limit: '16kb' }));
   app.use(cookieParser());
-  app.use('/api/auth', authRoutes({ config, database, authRateLimitMax }));
+  app.use('/api/auth', authRoutes({ config, database, logger, emailProvider, authRateLimitMax, registrationRateLimitMax, verificationRateLimitMax }));
   app.use('/api/admin', adminRoutes({ config, database }));
   app.use('/api', profileRoutes({ config, database }));
   app.use('/api', orderRoutes({ config, database }));

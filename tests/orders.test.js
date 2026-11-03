@@ -37,7 +37,7 @@ before(async () => {
   const users = [];
   for (const role of ['customer', 'customer', 'designer', 'designer', 'admin']) {
     const email = `m4-${ids.length}-${suffix}@example.test`;
-    const record = await database.models.User.create({ name: 'M4 fictional fixture', email, passwordHash, role,
+    const record = await database.models.User.create({ name: 'M4 fictional fixture', email, passwordHash, role, emailVerified: true,
       measurements: role === 'customer' ? { ...measurements, updatedAt: new Date() } : undefined,
       designer: role === 'designer' ? { businessName: 'Sample Studio', location: 'Sample City', specialties: ['Formal'], available: false,
         portfolio: [{ title: 'Sample', category: 'Formal', imageUrl: 'https://example.com/sample.jpg' }] } : undefined });

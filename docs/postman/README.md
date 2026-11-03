@@ -9,7 +9,7 @@ npm.cmd run test:postman
 
 On other shells, `npm` works in place of `npm.cmd`. Newman is pinned as a development dependency in the lockfile. No Postman login, API key, external server, or cloud publication is used.
 
-The runner starts the actual `createApp` on a free loopback port, with normal middleware, real MongoDB models, and unchanged default rate limits. It verifies the served OpenAPI title, version 0.6.0 and admin users path before running the collection. It does not load or modify `.env`, or use an existing development API. Database lifecycle is explicit; importing the runner does not start it. `TEST_MONGODB_URI` optionally selects a local port, but must match `mongodb://localhost:<port>/mygarb_phasonable_test` or the `127.0.0.1` equivalent exactly. Credentials, query strings, remote hosts and other databases are rejected before connecting.
+The runner starts the actual `createApp` on a free loopback port, with normal middleware and real MongoDB models. It raises only the registration-specific request budget to allow the negative registration cases in the full collection; the production default (five per hour/IP) is covered by integration tests. A test-only in-memory mailbox immediately submits each captured OTP through the real `/auth/verify-email` HTTP endpoint; no OTPs are printed or persisted by the runner. It verifies the served OpenAPI title, version 0.7.0 and admin users path before running the collection. It does not load or modify `.env`, or use an existing development API. Database lifecycle is explicit; importing the runner does not start it. `TEST_MONGODB_URI` optionally selects a local port, but must match `mongodb://localhost:<port>/mygarb_phasonable_test` or the `127.0.0.1` equivalent exactly. Credentials, query strings, remote hosts and other databases are rejected before connecting.
 
 Each run uses unique fictional customer/designer emails, a random password and signing key, and Newman's fresh default in-memory cookie jar. Cleanup selects only the two exact generated emails, removes sessions belonging to those users, then removes those users. No database is dropped or reset. The server and connection close after the run. A forced process kill can leave only that run's fixtures behind; no broad cleanup is attempted. Each invocation gets a fresh server rate-limit budget.
 
@@ -20,7 +20,7 @@ Output contains request names, HTTP statuses, assertion counts and cleanup count
 1. Import `MYGARB_Backend.postman_collection.json` and `local.postman_environment.json` from this directory.
 2. Select **MY GARB Local**. Point `baseUrl` at a separately configured local test API using only `mygarb_phasonable_test`. The shipped URL is a placeholder default; do not run this collection against development data. The automated runner manages its own ephemeral URL and exits afterward.
 3. Use No Auth and a fresh cookie jar for the selected hostname. Keep cookie handling enabled; use the same hostname throughout.
-4. Run the complete collection once, in order, with one iteration. Leave `authPassword` blank for a generated run-scoped fictional password, or supply a private demo value (8 Unicode code points minimum, 72 UTF-8 bytes maximum). The M2 folder initializes unique emails once per run. Run the folder rather than individual dependent requests.
+4. Registration returns generic HTTP 202 and no user ID or session. For GUI runs, retrieve the OTP for each registered address from the configured mailbox and POST `{"email":"{{customerEmail}}","otp":"123456"}` to `/auth/verify-email` with JSON content type and `X-MYGARB-Request: 1`; repeat with each registered address before continuing to its login. Verification returns 200 but does not log in. Leave `authPassword` blank for a generated run-scoped fictional password, or supply a private demo value (8 Unicode code points minimum, 72 UTF-8 bytes maximum). Run dependent requests in order after the required verification.
 5. Inspect assertion results. The final request intentionally receives 429. Wait 15 minutes for the default authentication budget before another GUI run. GUI runs retain fictional accounts because the API has no delete-account route; automated runs clean only their own fixtures.
 
 Do not export populated environments, run reports, console dumps or cookie jars. Committed environment credential/email fields are blank. Saved response examples are fictional, omit Set-Cookie, and contain no passwords or session tokens.
@@ -43,11 +43,12 @@ Designer registration substitutes `Demo designer`, `{{designerEmail}}` and `desi
 | No session, registration without login | 401 UNAUTHENTICATED |
 | Missing custom header, unlisted Origin, cross-site metadata | 403 CSRF_REJECTED |
 | Non-JSON auth POST | 415 JSON_REQUIRED |
-| Customer and designer registration | 201; exact safe fields, active status, expected role; no session issued |
-| Duplicate email | 409 REGISTRATION_CONFLICT |
+| Customer and designer registration | 202; same generic verification message for new/existing addresses; no session issued |
+| OTP verification | 200 after one-time delivery; invalid/expired/replayed codes return generic 400 `VERIFICATION_FAILED`; no session issued |
+| Resend verification | 202 generic response; delivery is not confirmed |
 | Public admin role, weak password, extra privileged field | 400 INVALID_INPUT |
 | Wrong password and unknown account | 401 INVALID_CREDENTIALS, same safe envelope |
-| Customer and designer login/current user | 200; exact safe fields, matching registration id/email/name/role |
+| Customer and designer login/current user | 200 after OTP verification; exact safe fields, matching email/name/role |
 | Login cookie | HttpOnly, SameSite=Strict, Path=/api, host-only |
 | Logout | 200; exact Logged out envelope; expired cookie with matching attributes |
 | Current user after either logout, replay of revoked cookie, repeated logout | 401 UNAUTHENTICATED |
@@ -73,3 +74,9 @@ The runner now executes M1/M2, M3, M4 and M5 separately with fresh APIs/cookie j
 ## M6 administration
 
 The main collection includes **M6 Administration** (20 requests/43 assertions). See the [M6 guide](M6-guide.md) and [blank optional environment](M6-manual.postman_environment.json). The automated runner creates/cleans only isolated fictional admin/customer fixtures. Preserve edited GUI collections by copying only the new folder from a temporary import. Manual repetition remains deferred.
+
+## Email verification collection update
+
+The importable updated copy is [MYGARB_Backend_Email_Verification.postman_collection.json](MYGARB_Backend_Email_Verification.postman_collection.json). It preserves the existing collection requests and variables and adds one folder named **Email Verification**. Import this file as a separate updated copy to preserve your existing Postman collection. To merge the folder into a collection that already has your edits, import the updated copy temporarily, select **Email Verification**, use Postman's copy/paste action in the sidebar, and paste it beneath your existing collection. Confirm the destination before pasting so the folder is not duplicated.
+
+The email folder uses the actual API contract: registration and resend return generic 202 responses; successful verification returns 200 without a session; invalid, expired and replayed codes return generic 400; login before verification returns 401 and login afterward follows the normal login flow. Email values and OTPs are variables; `authPassword` reuses the existing environment variable. The folder includes additional cooldown and rate-limit scenarios. Mailbox delivery and the 10-minute expiry require real mailbox access and elapsed time. The collection does not capture OTPs or fake provider delivery. Set the email provider before trying real delivery, and use only an isolated test database for write requests.

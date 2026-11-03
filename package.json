@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "test": "node --test --test-concurrency=1 tests/*.test.js",
     "setup:admin": "node scripts/setup-admin.js",
+    "migrate:email-verification": "node scripts/migrate-email-verification.js",
     "test:postman": "node scripts/test-postman.js"
   },
   "dependencies": {

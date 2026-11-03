@@ -1,6 +1,7 @@
 const { loadConfig } = require('../src/config/env');
 const { createDatabase } = require('../src/config/database');
 const { setupAdmin } = require('../src/services/admin');
+const { createEmailProvider } = require('../src/services/email');
 
 async function main() {
   const config = loadConfig();
@@ -10,8 +11,14 @@ async function main() {
   try {
     await database.connect(config.mongoUri);
     await database.prepareAuth();
-    const result = await setupAdmin({ models: database.models, config, env: process.env });
-    console.info(result.created ? 'Administrator created' : 'Active administrator already exists; unchanged');
+    const result = await setupAdmin({ models: database.models, config, env: process.env, emailProvider: createEmailProvider(config) });
+    if (!result.created) {
+      console.info('Active administrator already exists; unchanged');
+    } else if (result.deliveryAccepted) {
+      console.info('Unverified administrator created; email provider accepted the verification message. Verify the mailbox before login.');
+    } else {
+      console.info('Unverified administrator created; email delivery was not confirmed. Configure the provider or wait before requesting another code.');
+    }
   } finally { await database.close(); }
 }
 

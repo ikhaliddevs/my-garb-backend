@@ -1,13 +1,14 @@
 const { createApp } = require('./app');
 const { loadConfig } = require('./config/env');
 const { createDatabase } = require('./config/database');
+const { createEmailProvider } = require('./services/email');
 
-async function startServer({ config = loadConfig(), database = createDatabase(), logger = console } = {}) {
+async function startServer({ config = loadConfig(), database = createDatabase(), logger = console, emailProvider = createEmailProvider(config) } = {}) {
   await database.connect(config.mongoUri);
   let server;
   try {
     await database.prepareAuth();
-    const app = createApp({ config, database, logger });
+    const app = createApp({ config, database, logger, emailProvider });
     server = await new Promise((resolve, reject) => {
       const listener = app.listen(config.port, error => error ? reject(error) : resolve(listener));
       listener.once('error', reject);

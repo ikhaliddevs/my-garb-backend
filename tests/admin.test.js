@@ -23,12 +23,14 @@ async function login(user) {
 before(async () => {
   db = createDatabase(); await db.connect(uri); await db.prepareAuth();
   app = createApp({ config, database: db, logger: { info() {} }, rateLimitMax: 10000, authRateLimitMax: 100 });
-  auth = createAuthService({ models: db.models, config });
+  auth = createAuthService({ models: db.models, config, emailProvider: { async sendVerificationCode() {} } });
   for (const role of ['admin', 'admin', 'customer', 'designer', 'customer', 'designer']) {
     const email = `m6-${ids.length}-${suffix}@example.test`;
     const input = { name: 'M6 fictional fixture', email, password, role };
-    const u = role === 'admin' ? await auth.register(input) : (await call('post', '/auth/register', null, input).expect(201)).body.data.user;
-    ids.push(u.id); const user = { ...u, email }; await login(user); users.push(user);
+    await auth.register(input);
+    const stored = await db.models.User.findOne({ email });
+    await db.models.User.updateOne({ _id: stored._id }, { $set: { emailVerified: true, emailVerifiedAt: new Date() } });
+    const user = { id: String(stored._id), email }; ids.push(user.id); await login(user); users.push(user);
   }
   [admin, admin2] = users;
 });

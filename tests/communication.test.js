@@ -36,7 +36,7 @@ before(async () => {
   const password = randomBytes(20).toString('hex'), passwordHash = await bcrypt.hash(password, 12), users = [];
   for (const role of ['customer', 'designer', 'customer', 'designer', 'admin']) {
     const email = `m5-${ids.length}-${suffix}@example.test`;
-    const r = await db.models.User.create({ name: 'M5 fictional fixture', email, passwordHash, role,
+    const r = await db.models.User.create({ name: 'M5 fictional fixture', email, passwordHash, role, emailVerified: true,
       measurements: role === 'customer' ? { ...original, updatedAt: new Date() } : undefined,
       designer: role === 'designer' ? { businessName: 'Sample Studio', location: 'Sample City', specialties: ['Formal'], available: true, portfolio: [{ title: 'Sample', category: 'Formal', imageUrl: 'https://example.com/sample.jpg' }] } : undefined });
     ids.push(r._id);

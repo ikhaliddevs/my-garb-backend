@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "MY GARB PHASONABLE Backend",
-    "version": "0.6.0",
-    "description": "MY GARB backend M1-M5. Cookie authentication, private profiles, immutable request/order originals, participant text conversations, explicit versioned measurement consent and durable owner-only in-app notifications. Standalone MongoDB; no payments, sockets or admin private-data access. M6 adds bounded admin metadata lists and customer/designer suspension with persistent session revocation."
+    "version": "0.7.0",
+    "description": "MY GARB backend M1-M6. Cookie authentication requires email OTP verification; includes private profiles, immutable requests/orders, participant text conversations, explicit versioned measurement consent, durable notifications, bounded administration and persistent session revocation. Standalone MongoDB; no payments or sockets."
   },
   "servers": [
     {
@@ -268,7 +268,8 @@
     },
     "/api/auth/register": {
       "post": {
-        "summary": "Register a customer or designer (does not log in)",
+        "summary": "Register an unverified customer or designer and request email verification",
+        "description": "Returns the same 202 response for new and existing addresses. Sends a cryptographically random six-digit OTP when delivery is configured; the code expires after 10 minutes. No session is created. Registration is limited to five requests per hour/IP.",
         "tags": [
           "Authentication"
         ],
@@ -297,12 +298,12 @@
           }
         },
         "responses": {
-          "201": {
-            "description": "Safe user data",
+          "202": {
+            "description": "Generic response; address eligibility and email delivery are not confirmed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "$ref": "#/components/schemas/VerificationRequestResponse"
                 }
               }
             }
@@ -317,28 +318,8 @@
               }
             }
           },
-          "401": {
-            "description": "INVALID_CREDENTIALS or UNAUTHENTICATED",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
           "403": {
-            "description": "CSRF_REJECTED or FORBIDDEN",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "REGISTRATION_CONFLICT; email cannot be registered",
+            "description": "CSRF_REJECTED",
             "content": {
               "application/json": {
                 "schema": {
@@ -359,6 +340,204 @@
           },
           "415": {
             "description": "JSON_REQUIRED or unsupported encoding",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "AUTH_RATE_LIMITED or RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; no details exposed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/verify-email": {
+      "post": {
+        "summary": "Verify email with a single-use OTP; does not create a session",
+        "description": "Six-digit code expires after 10 minutes and allows at most five attempts. Verification is limited to 15 requests per 15 minutes/IP. A successful verification invalidates prior sessions; log in afterward.",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-MYGARB-Request",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email verified; no session cookie is issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "emailVerified"
+                      ],
+                      "properties": {
+                        "emailVerified": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVALID_INPUT or generic VERIFICATION_FAILED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "CSRF_REJECTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "AUTH_RATE_LIMITED or RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; no details exposed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/resend-verification": {
+      "post": {
+        "summary": "Request another email verification code",
+        "description": "Applies a 60-second cooldown, up to five sends per account in a 24-hour window measured from the first send and five requests per hour/IP. The generic response does not confirm address eligibility or delivery.",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-MYGARB-Request",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendVerificationInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Generic response for known/unknown addresses and delivery outcomes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerificationRequestResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVALID_INPUT or malformed JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "CSRF_REJECTED",
             "content": {
               "application/json": {
                 "schema": {
@@ -6214,6 +6393,69 @@
               "customer",
               "designer"
             ]
+          }
+        }
+      },
+      "VerifyEmailInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "email",
+          "otp"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "otp": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "description": "Six-digit email verification code."
+          }
+        }
+      },
+      "ResendVerificationInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          }
+        }
+      },
+      "VerificationRequestResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "success",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "If this address is eligible, check it for a verification code. Delivery is not confirmed; request a resend if no code arrives."
+              }
+            }
           }
         }
       },
