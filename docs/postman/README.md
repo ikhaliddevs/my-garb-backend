@@ -17,7 +17,7 @@ Output contains request names, HTTP statuses, assertion counts and cleanup count
 
 ## Import into Postman
 
-1. Import `MYGARB_Backend.postman_collection.json` and `local.postman_environment.json` from this directory.
+1. Import `MYGARB_Backend_Email_Verification.postman_collection.json` and `local.postman_environment.json` from this directory. This updated copy matches the current email-verification contract; the original exported `MYGARB_Backend.postman_collection.json` is preserved unchanged.
 2. Select **MY GARB Local**. Point `baseUrl` at a separately configured local test API using only `mygarb_phasonable_test`. The shipped URL is a placeholder default; do not run this collection against development data. The automated runner manages its own ephemeral URL and exits afterward.
 3. Use No Auth and a fresh cookie jar for the selected hostname. Keep cookie handling enabled; use the same hostname throughout.
 4. Registration returns generic HTTP 202 and no user ID or session. For GUI runs, retrieve the OTP for each registered address from the configured mailbox and POST `{"email":"{{customerEmail}}","otp":"123456"}` to `/auth/verify-email` with JSON content type and `X-MYGARB-Request: 1`; repeat with each registered address before continuing to its login. Verification returns 200 but does not log in. Leave `authPassword` blank for a generated run-scoped fictional password, or supply a private demo value (8 Unicode code points minimum, 72 UTF-8 bytes maximum). Run dependent requests in order after the required verification.

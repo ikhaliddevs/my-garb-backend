@@ -6,10 +6,10 @@ const { createDatabase } = require('../src/config/database');
 const { createAuthService } = require('../src/services/auth');
 
 async function main({ m3 = false, m4 = false, m5 = false, m6 = false } = {}) {
-  const source = require('../docs/postman/MYGARB_Backend.postman_collection.json');
+  const source = require('../docs/postman/MYGARB_Backend_Email_Verification.postman_collection.json');
   // Each milestone gets its own API, cookie jar and unchanged rate-limit budget.
   const collection = m3 ? require('../docs/postman/MYGARB_M3.postman_collection.json') : {
-    ...source, item: source.item.filter(item => m6 ? item.name === 'M6 Administration' : m5 ? item.name === 'M5 Conversations and Notifications' : m4 ? item.name === 'M4 Requests and Orders' : !['M4 Requests and Orders', 'M5 Conversations and Notifications', 'M6 Administration'].includes(item.name)),
+    ...source, item: source.item.filter(item => m6 ? item.name === 'M6 Administration' : m5 ? item.name === 'M5 Conversations and Notifications' : m4 ? item.name === 'M4 Requests and Orders' : !['M4 Requests and Orders', 'M5 Conversations and Notifications', 'M6 Administration', 'Email Verification'].includes(item.name)),
   };
   const uri = process.env.TEST_MONGODB_URI || 'mongodb://127.0.0.1:27017/mygarb_phasonable_test';
   if (!/^mongodb:\/\/(?:127\.0\.0\.1|localhost):\d+\/mygarb_phasonable_test$/.test(uri)) throw new Error('Unsafe test database');
